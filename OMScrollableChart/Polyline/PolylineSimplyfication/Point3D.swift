@@ -8,6 +8,10 @@
 
 import UIKit
 
+// swiftlint:disable identifier_name shorthand_operator
+// swiftlint:disable file_length
+// swiftlint:disable type_body_length
+
 struct Point3D: Comparable {
     static func < (lhs: Point3D, rhs: Point3D) -> Bool {
         return lhs.z < rhs.z
@@ -58,3 +62,7 @@ extension Point3D {
         return result
     }
 }
+
+// swiftlint:enable identifier_name shorthand_operator
+// swiftlint:enable file_length
+// swiftlint:enable type_body_length

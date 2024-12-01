@@ -1,0 +1,3 @@
+[submodule "GUILib"]
+	path = GUILib
+	url = git@github.com:JorgeOOMM/GUILib.git

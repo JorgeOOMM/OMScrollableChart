@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import GUILib
 
 #if os(macOS)
 public typealias VectorVal = CGFloat

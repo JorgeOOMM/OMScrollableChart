@@ -170,7 +170,7 @@ extension OMScrollableChart {
             }
         }
         if animation {
-            let distance = tooltipPositionFix.distance(to: tooltipPosition)
+            let distance = tooltipPositionFix.distance(tooltipPosition)
             let factor: TimeInterval = TimeInterval(1 / (self.contentView.bounds.height / distance))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 self.tooltip.moveTooltip(tooltipPositionFix,
@@ -195,13 +195,13 @@ extension OMScrollableChart {
         let newPoint = CGPoint(x: point.x, y: point.y)
         switch self.renderType[renderIndex] {
         case .discrete:
-            return discreteData[renderIndex]?.points.map{ $0.distance(to: newPoint)}.indexOfMin
+            return discreteData[renderIndex]?.points.map{ $0.distance(newPoint)}.indexOfMin
         case .averaged(_):
-            return averagedData[renderIndex]?.points.map{ $0.distance(to: newPoint)}.indexOfMin
+            return averagedData[renderIndex]?.points.map{ $0.distance(newPoint)}.indexOfMin
         case .approximation(_):
-            return approximationData[renderIndex]?.points.map{ $0.distance(to: newPoint)}.indexOfMin
+            return approximationData[renderIndex]?.points.map{ $0.distance(newPoint)}.indexOfMin
         case .linregress(_):
-            return linregressData[renderIndex]?.points.map{ $0.distance(to: newPoint)}.indexOfMin
+            return linregressData[renderIndex]?.points.map{ $0.distance(newPoint)}.indexOfMin
         }
     }
     /// dataStringFromPoint
