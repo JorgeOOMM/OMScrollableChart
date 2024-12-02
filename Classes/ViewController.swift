@@ -247,7 +247,7 @@ class ViewController: UIViewController, OMScrollableChartDataSource, OMScrollabl
         switch segmentTypeOfData.selectedSegmentIndex  {
         case 0: renderType = .discrete
         case 1: renderType = .averaged(2)
-        case 2: renderType = .approximation(0.5)
+        case 2: renderType = .simplified(0)
         case 3: renderType = .linregress(Int(1))
         default:
             assert(false)

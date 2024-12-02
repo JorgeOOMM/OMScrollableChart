@@ -37,238 +37,6 @@ extension UIColor {
     }
 }
 
-public class DashLineManager {
-    
-    func removeVerticalLineLayers() {
-        dashVerticalLineLayers.forEach({$0.removeFromSuperlayer()})
-        dashVerticalLineLayers.removeAll()
-    }
-    
-    var dashVerticalLineLayers = [CAShapeLayer]()
-    var contentView: UIView
-    init(contentView: UIView) {
-        self.contentView = contentView
-    }
-    
-    /// addDashLineLayer
-    ///
-    /// - Parameters:
-    ///   - point: CGPoint
-    ///   - endPoint: CGPoint
-    ///   - stroke: UIColor
-    ///   - lineWidth: CGFloat
-    ///   - pattern: [NSNumber]?
-    
-    func lineForRuleMark(point: CGPoint,
-                                      endPoint: CGPoint,
-                                      stroke: UIColor? = nil,
-                                      lineWidth: CGFloat? = nil,
-                                      pattern: [NSNumber]? = nil)
-    {
-        let lineLayer = CAShapeLayer()
-        lineLayer.strokeColor = stroke?.cgColor ?? dashLineColor
-        lineLayer.lineWidth = lineWidth ?? dashLineWidth
-        lineLayer.lineDashPattern = pattern ?? dashPattern as [NSNumber]
-        let path = CGMutablePath()
-        path.addLines(between: [point, endPoint])
-        lineLayer.path = path
-        lineLayer.name = "Rule mark dashline"
-        dashVerticalLineLayers.append(lineLayer)
-        contentView.layer.addSublayer(lineLayer)
-    }
-    
-    var dashPattern: [CGFloat] = [1, 2] {
-        didSet {
-            dashVerticalLineLayers.forEach { ($0).lineDashPattern = dashPattern.map { NSNumber(value: Float($0)) }}
-        }
-    }
-    
-    var dashLineWidth: CGFloat = 0.80 {
-        didSet {
-            dashVerticalLineLayers.forEach { $0.lineWidth = dashLineWidth }
-        }
-    }
-    
-    var dashLineColor = UIColor.black.withAlphaComponent(0.8).cgColor {
-        didSet {
-            dashVerticalLineLayers.forEach { $0.strokeColor = dashLineColor }
-        }
-    }
-}
-
-
-public struct RuleManager {
-    var chart: OMScrollableChart
-    init(chart: OMScrollableChart) {
-        self.chart = chart
-    }
-    
-    public var rulesMarks = [Float]()
-    func addToVerticalRuleMarks(leadingRule: ChartRuleProtocol) {
-        chart.dashlines.removeVerticalLineLayers()
-        let leadingRuleWidth: CGFloat = leadingRule.ruleSize.width
-        let width: CGFloat = chart.contentView.frame.width
-        let fontSize = ruleFont.pointSize
-        let maxIndex = rulesPoints.count - 1
-        for (index, item) in rulesPoints.enumerated() {
-            var yPos = item.y
-            if index > 0 {
-                if index < maxIndex {
-                    yPos = item.y
-                } else {
-                    yPos = item.y
-                }
-            }
-            let markPointLeft  = CGPoint(x: leadingRuleWidth, y: yPos - fontSize)
-            let markPointRight = CGPoint(x: width, y: yPos - fontSize)
-            chart.dashlines.lineForRuleMark(point: markPointLeft,
-                                            endPoint: markPointRight)
-        }
-    }
-
-    var rootRule: ChartRuleProtocol?
-    var footerRule: ChartRuleProtocol?
-    var topRule: ChartRuleProtocol?
-    var rules = [ChartRuleProtocol]()
-    var ruleLeadingAnchor: NSLayoutConstraint?
-    var ruletopAnchor: NSLayoutConstraint?
-    var rulebottomAnchor: NSLayoutConstraint?
-    var rulewidthAnchor: NSLayoutConstraint?
-    var ruleHeightAnchor: NSLayoutConstraint?
-    var ruleFont = UIFont.systemFont(ofSize: 10, weight: .medium)
-    var rulesPoints = [CGPoint]()
-    var footerViewHeight: CGFloat = 60
-    var topViewHeight: CGFloat = 20
-    
-    func hideRules() { rules.forEach { $0.isHidden = true }}
-    func showRules() { rules.forEach { $0.isHidden = false }}
-    
-    /// Create and add rules
-    mutating func configure(with color: UIColor, and footerColor: UIColor) {
-        let rootRule = OMScrollableLeadingChartRule(chart: chart)
-        rootRule.chart = chart
-        rootRule.font = ruleFont
-        rootRule.fontColor = color
-        let footerRule = OMScrollableChartRuleFooter(chart: chart)
-        footerRule.chart = chart
-        footerRule.font = ruleFont
-        footerRule.fontColor = footerColor
-        self.rootRule = rootRule
-        self.footerRule = footerRule
-        rules.append(rootRule)
-        rules.append(footerRule)
-        // self.rules.append(topRule)
-        
-        //        if let topRule = topRule {
-        //
-        //        }
-    }
-
-    mutating func configureRules( using contentView: UIView) {
-        addLeadingRuleIfNeeded(rootRule, contentView: contentView, view: nil)
-        addFooterRuleIfNeeded(footerRule, contentView: contentView)
-        rulebottomAnchor?.isActive = true
-    }
-
-    /// addLeadingRuleIfNeeded
-    /// - Parameters:
-    ///   - rule: ChartRuleProtocol
-    ///   -mutating  view: UIView
-    mutating func addLeadingRuleIfNeeded(_ rule: ChartRuleProtocol?,
-                                         contentView: UIView,
-                                         view: UIView? = nil) {
-        guard let rule = rule else {
-            return
-        }
-        // rule.backgroundColor = .red
-        assert(rule.type == .leading)
-        if rule.superview == nil {
-            rule.translatesAutoresizingMaskIntoConstraints = false
-            if let view = view {
-                view.insertSubview(rule, at: rule.type.rawValue)
-            } else {
-                rule.chart.insertSubview(rule, at: rule.type.rawValue)
-            }
-            let width = rule.ruleSize.width > 0 ?
-                rule.ruleSize.width :
-                contentView.bounds.width
-            let height = rule.ruleSize.height > 0 ?
-                rule.ruleSize.height :
-                contentView.bounds.height
-//            print(height, width)
-            ruleLeadingAnchor = rule.leadingAnchor.constraint(equalTo: rule.chart.leadingAnchor)
-            ruletopAnchor = rule.topAnchor.constraint(equalTo: contentView.topAnchor)
-            rulewidthAnchor = rule.widthAnchor.constraint(equalToConstant: CGFloat(width))
-            ruleHeightAnchor = rule.heightAnchor.constraint(equalToConstant: CGFloat(height))
-            
-            if let footerRule = footerRule {
-                rulebottomAnchor = rule.bottomAnchor.constraint(equalTo: footerRule.bottomAnchor,
-                                                                constant: -footerRule.ruleSize.height)
-            }
-            
-            ruleLeadingAnchor?.isActive = true
-            ruletopAnchor?.isActive = true
-            // rulebottomAnchor?.isActive  = true
-            rulewidthAnchor?.isActive = true
-            ruleHeightAnchor?.isActive = true
-        }
-    }
-    
-    /// addFooterRuleIfNeeded
-    /// - Parameters:
-    ///   - rule: ruleFooter description
-    ///   - view: UIView
-    func addFooterRuleIfNeeded(_ rule: ChartRuleProtocol? = nil,
-                               contentView: UIView,
-                               view: UIView? = nil)
-    {
-        guard let rule = rule else {
-            return
-        }
-        assert(rule.type == .footer)
-        // rule.backgroundColor = .red
-        if rule.superview == nil {
-            rule.translatesAutoresizingMaskIntoConstraints = false
-            if let view = view {
-                view.insertSubview(rule, at: rule.type.rawValue)
-            } else {
-                rule.chart.insertSubview(rule, at: rule.type.rawValue)
-            }
-            
-            let width = rule.ruleSize.width > 0 ?
-                rule.ruleSize.width :
-                contentView.bounds.width
-            let height = rule.ruleSize.height > 0 ?
-                rule.ruleSize.height :
-                contentView.bounds.height
-        
-            rule.leadingAnchor.constraint(equalTo: rule.chart.leadingAnchor).isActive = true
-            rule.trailingAnchor.constraint(equalTo: rule.chart.trailingAnchor).isActive = true
-            rule.topAnchor.constraint(equalTo: contentView.bottomAnchor,
-                                      constant: 0).isActive = true
-            rule.heightAnchor.constraint(equalToConstant: CGFloat(height)).isActive = true
-            rule.widthAnchor.constraint(equalToConstant: width).isActive = true
-        }
-    }
-    
-    //     func addTopRuleIfNeeded(_ ruleTop: ChartRuleProtocol? = nil) {
-    //        guard let ruleTop = ruleTop else {
-    //            return
-    //        }
-    //        assert(ruleTop.type == .top)
-    //        //ruleTop.removeFromSuperview()
-    //        ruleTop.translatesAutoresizingMaskIntoConstraints = false
-    //        ruleTop.backgroundColor = UIColor.clear
-    //        self.addSubview(ruleTop)
-    //        //        topView.leadingAnchor.constraint(equalTo: self.leadingAnchor).isActive = true
-    //        //        topView.trailingAnchor.constraint(equalTo: self.trailingAnchor).isActive = true
-    //        ruleTop.topAnchor.constraint(equalTo:  self.topAnchor).isActive = true
-    //        ruleTop.heightAnchor.constraint(equalToConstant: CGFloat(topViewHeight)).isActive = true
-    //        ruleTop.widthAnchor.constraint(equalToConstant: contentSize.width).isActive = true
-    //        ruleTop.backgroundColor = .gray
-    //    }
-}
-
 
 extension UIScrollView {
     func zoom(toPoint zoomPoint : CGPoint, scale : CGFloat, animated : Bool) {
@@ -355,49 +123,6 @@ extension Array {
     }
 }
 
-protocol ChartProtocol {
-    associatedtype ChartData
-    var discreteData: [ChartData?] {get set}
-    func updateDataSourceData() -> Bool
-}
-
-
-public enum AnimationTiming: Hashable {
-    case none
-    case repeatn(Int)
-    case infinite
-    case oneShot
-}
-
-
-protocol OMScrollableChartDataSource: AnyObject {
-    func dataPoints(chart: OMScrollableChart, renderIndex: Int, section: Int) -> [Float]
-    func numberOfPages(chart: OMScrollableChart) -> CGFloat
-    func dataLayers(chart: OMScrollableChart, renderIndex: Int, section: Int, points: [CGPoint]) -> [OMGradientShapeClipLayer]
-    func footerSectionsText(chart: OMScrollableChart) -> [String]?
-    func dataPointTootipText(chart: OMScrollableChart, renderIndex: Int, dataIndex: Int, section: Int) -> String? 
-    func dataOfRender(chart: OMScrollableChart, renderIndex: Int) -> OMScrollableChart.RenderType
-    func dataSectionForIndex(chart: OMScrollableChart, dataIndex: Int, section: Int) -> String? 
-    func numberOfSectionsPerPage(chart: OMScrollableChart) -> Int
-    func layerOpacity(chart: OMScrollableChart, renderIndex: Int) -> CGFloat
-    func queryAnimation(chart: OMScrollableChart, renderIndex: Int) -> AnimationTiming
-    func animateLayers(chart: OMScrollableChart, renderIndex: Int, layerIndex: Int ,layer: OMGradientShapeClipLayer) -> CAAnimation?
-    
-    
-}
-protocol OMScrollableChartRenderableDelegateProtocol: AnyObject {
-    func animationDidEnded(chart: OMScrollableChart,  renderIndex: Int, animation: CAAnimation)
-    func didSelectDataIndex(chart: OMScrollableChart, renderIndex: Int, dataIndex: Int, layer: CALayer)
-}
-protocol OMScrollableChartRenderableProtocol: AnyObject {
-    var numberOfRenders: Int {get}
-}
-extension OMScrollableChartRenderableProtocol {
-    // Default renders, polyline and points
-    var numberOfRenders: Int {
-        return 2
-    }
-}
 @objcMembers
 public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtocol, CAAnimationDelegate {
     private var pointsLayer: OMGradientShapeClipLayer =  OMGradientShapeClipLayer()
@@ -1108,7 +833,7 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
     public enum RenderType: Equatable{
         case discrete
         case averaged(Int)
-        case approximation(CGFloat)
+        case simplified(CGFloat)
         case linregress(Int)
         func makePoints( data: [Float], for size: CGSize, generator: ScaledPointsGenerator) -> [CGPoint] {
             switch self {
@@ -1132,7 +857,7 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
                     //let averagedData = groupAverage(positives, numberOfElements: positives.count)
                     return generator.makePoints(data: averagedData, size: size)
                 }
-            case .approximation(let tolerance):
+            case .simplified(let tolerance):
                 let points = generator.makePoints(data: data, size: size)
                 guard tolerance != 0, points.isEmpty == false else {
                     return []
@@ -1262,7 +987,7 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         }
         return []
     }
-    func makeApproximationPoints( points: [CGPoint], tolerance: CGFloat) -> [CGPoint]? {
+    func makeSimplifiedPoints( points: [CGPoint], tolerance: CGFloat) -> [CGPoint]? {
         guard tolerance != 0, points.isEmpty == false else {
             return nil
         }
@@ -1322,6 +1047,10 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
     func updateRenderLayersOpacity( for renderIndex: Int, layerOpacity: CGFloat) {
         // Don't delay the opacity
         if renderIndex == Renders.points.rawValue {
+            return
+        }
+        // The render layers must exist
+        guard renderLayers.count > 0 else {
             return
         }
         renderLayers[renderIndex].enumerated().forEach { layerIndex, layer  in
@@ -1835,33 +1564,3 @@ extension OMScrollableChart {
     }
 }
 
-class Stadistics {
-    
-    class func mean(_ lhs: [Float]) -> Float {
-        var result: Float = 0
-        vDSP_meanv(lhs, 1, &result, vDSP_Length(lhs.count))
-        return result
-        
-    }
-    class func measq(_ lhs: [Float]) -> Float {
-        var result: Float = 0
-        vDSP_measqv(lhs, 1, &result, vDSP_Length(lhs.count))
-        return result
-        
-    }
-    class func linregress(_ lhs: [Float], _ rhs: [Float]) -> (slope: Float, intercept: Float) {
-        precondition(lhs.count == rhs.count, "Vectors must have equal count")
-        let meanx = mean(lhs)
-        let meany = mean(rhs)
-        var result: [Float] = [Float].init(repeating: 0, count: lhs.count)
-        vDSP_vmul(lhs, 1, rhs, 1, &result, 1, vDSP_Length(lhs.count))
-        
-        let meanxy = mean(result)
-        let meanxSqr = measq(lhs)
-        
-        let slope = (meanx * meany - meanxy) / (meanx * meanx - meanxSqr)
-        let intercept = meany - slope * meanx
-        return (slope, intercept)
-    }
-    
-}

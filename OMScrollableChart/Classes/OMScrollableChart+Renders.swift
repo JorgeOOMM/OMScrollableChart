@@ -138,12 +138,12 @@ extension OMScrollableChart {
         
         return [polylineLayer]
     }
-    func makeApproximation(_ data: [Float], _ renderIndex: Int, _ dataSource: OMScrollableChartDataSource) {
+    func makeSimplified(_ data: [Float], _ renderIndex: Int, _ dataSource: OMScrollableChartDataSource) {
         let discretePoints = makeRawPoints(data, size: contentView.bounds.size)
         
         if discretePoints.count > 0 {
             let chartData = (discretePoints, data)
-            if let approximationPoints =  makeApproximationPoints( points: discretePoints,
+            if let approximationPoints =  makeSimplifiedPoints( points: discretePoints,
                                                                    tolerance: approximationTolerance) {
                 if approximationPoints.count > 0 {
                     self.approximationData.insert(chartData, at: renderIndex)
@@ -246,7 +246,7 @@ extension OMScrollableChart {
         }
         let currentRenderData = renderDataPoints[renderIndex]
         switch renderAs {
-        case .approximation: makeApproximation(currentRenderData, renderIndex, dataSource)
+        case .simplified: makeSimplified(currentRenderData, renderIndex, dataSource)
         case .averaged: makeAverage(currentRenderData, renderIndex, dataSource)
         case .discrete: makeDiscrete(currentRenderData, renderIndex, dataSource)
         case .linregress: makeLinregress(currentRenderData, renderIndex, dataSource)

@@ -198,7 +198,7 @@ extension OMScrollableChart {
             return discreteData[renderIndex]?.points.map{ $0.distance(newPoint)}.indexOfMin
         case .averaged(_):
             return averagedData[renderIndex]?.points.map{ $0.distance(newPoint)}.indexOfMin
-        case .approximation(_):
+        case .simplified(_):
             return approximationData[renderIndex]?.points.map{ $0.distance(newPoint)}.indexOfMin
         case .linregress(_):
             return linregressData[renderIndex]?.points.map{ $0.distance(newPoint)}.indexOfMin
@@ -227,7 +227,7 @@ extension OMScrollableChart {
                     return currentStep
                 }
             }
-        case .approximation(_):
+        case .simplified(_):
             if let render = approximationData[renderIndex],
                 let firstIndex = render.points.firstIndex(of: point) {
                 let item: Double = Double(render.data[firstIndex])
@@ -272,7 +272,7 @@ extension OMScrollableChart {
                     return render.data[firstIndex]
                 }
             }
-        case .approximation(_):
+        case .simplified(_):
             if let render = self.approximationData[renderIndex] {
                 if let firstIndex = render.points.firstIndex(of: point) {
                     return render.data[firstIndex]
@@ -301,7 +301,7 @@ extension OMScrollableChart {
                 return firstIndex
             }
             
-        case .approximation(_):
+        case .simplified(_):
             if let render = self.approximationData[renderIndex] {
                 if let firstIndex = render.points.firstIndex(of: point) {
                     return firstIndex
