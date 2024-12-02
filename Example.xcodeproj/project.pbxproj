@@ -3,12 +3,11 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		0456A3252CFC95F000EDA890 /* GUILib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0456A3242CFC95F000EDA890 /* GUILib.framework */; };
-		04B124B22CFC9B8600E49914 /* Point3D.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04B124B12CFC9B8600E49914 /* Point3D.swift */; };
 		7D0FC234253A6F2E00F3538E /* OMBubbleShapeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0FC233253A6F2E00F3538E /* OMBubbleShapeView.swift */; };
 		7D0FC236253A6F9100F3538E /* UIView+Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0FC235253A6F9100F3538E /* UIView+Animations.swift */; };
 		7D0FC238253A7ADB00F3538E /* OMGradientShapeClipLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0FC237253A7ADB00F3538E /* OMGradientShapeClipLayer.swift */; };
@@ -23,22 +22,11 @@
 		D13C9C9124FB459B00498B01 /* OMScrollableLeadingChartRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C7324FB459A00498B01 /* OMScrollableLeadingChartRule.swift */; };
 		D13C9C9224FB459B00498B01 /* OMScrollableChart+Renders.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C7424FB459A00498B01 /* OMScrollableChart+Renders.swift */; };
 		D13C9C9324FB459B00498B01 /* OMBubbleTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C7624FB459A00498B01 /* OMBubbleTextView.swift */; };
-		D13C9C9424FB459B00498B01 /* PolylineDecimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C7824FB459A00498B01 /* PolylineDecimation.swift */; };
-		D13C9C9524FB459B00498B01 /* PolylineSimplify.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C7924FB459A00498B01 /* PolylineSimplify.swift */; };
-		D13C9C9B24FB459B00498B01 /* CubicCurveAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C8124FB459B00498B01 /* CubicCurveAlgorithm.swift */; };
-		D13C9C9C24FB459B00498B01 /* UIBezierPath+Interpolation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C8224FB459B00498B01 /* UIBezierPath+Interpolation.swift */; };
 		D13C9C9D24FB459B00498B01 /* OMScrollableChart+Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C8324FB459B00498B01 /* OMScrollableChart+Animations.swift */; };
-		D13C9C9E24FB459B00498B01 /* Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C8524FB459B00498B01 /* Path.swift */; };
-		D13C9C9F24FB459B00498B01 /* PathElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C8624FB459B00498B01 /* PathElement.swift */; };
-		D13C9CA124FB459B00498B01 /* DiscreteScaledPointsGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C8824FB459B00498B01 /* DiscreteScaledPointsGenerator.swift */; };
 		D13C9CA324FB459B00498B01 /* OMScrollableChart+Selection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C8A24FB459B00498B01 /* OMScrollableChart+Selection.swift */; };
 		D13C9CA424FB459B00498B01 /* OMScrollableChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C8B24FB459B00498B01 /* OMScrollableChart.swift */; };
-		D13C9CA524FB459B00498B01 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = D13C9C8C24FB459B00498B01 /* LICENSE */; };
 		D13C9CA624FB459B00498B01 /* OScrollableChart+Tooltip.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9C8D24FB459B00498B01 /* OScrollableChart+Tooltip.swift */; };
-		D13C9CA924FB460900498B01 /* PathAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9CA824FB460900498B01 /* PathAnimation.swift */; };
-		D13C9CAB24FB464F00498B01 /* CALayerHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13C9CAA24FB464F00498B01 /* CALayerHandler.swift */; };
 		D161A516254B9EBA00DDE361 /* OMScrollableChart+PathRide.swift in Sources */ = {isa = PBXBuildFile; fileRef = D161A515254B9EBA00DDE361 /* OMScrollableChart+PathRide.swift */; };
-		D164527424FE8BCD0070014F /* PolyLineInterpolation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D164527324FE8BCD0070014F /* PolyLineInterpolation.swift */; };
 		D192CD08254AB20E0047FBFB /* ExampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D192CD07254AB20E0047FBFB /* ExampleTests.swift */; };
 		D192CD24254AB4230047FBFB /* ExampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DBAA402253A7FF9000EE535 /* ExampleUITests.swift */; };
 /* End PBXBuildFile section */
@@ -62,7 +50,6 @@
 
 /* Begin PBXFileReference section */
 		0456A3242CFC95F000EDA890 /* GUILib.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = GUILib.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		04B124B12CFC9B8600E49914 /* Point3D.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Point3D.swift; sourceTree = "<group>"; };
 		7D0FC233253A6F2E00F3538E /* OMBubbleShapeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OMBubbleShapeView.swift; sourceTree = "<group>"; };
 		7D0FC235253A6F9100F3538E /* UIView+Animations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Animations.swift"; sourceTree = "<group>"; };
 		7D0FC237253A7ADB00F3538E /* OMGradientShapeClipLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OMGradientShapeClipLayer.swift; sourceTree = "<group>"; };
@@ -81,22 +68,11 @@
 		D13C9C7324FB459A00498B01 /* OMScrollableLeadingChartRule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OMScrollableLeadingChartRule.swift; sourceTree = "<group>"; };
 		D13C9C7424FB459A00498B01 /* OMScrollableChart+Renders.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OMScrollableChart+Renders.swift"; sourceTree = "<group>"; };
 		D13C9C7624FB459A00498B01 /* OMBubbleTextView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OMBubbleTextView.swift; sourceTree = "<group>"; };
-		D13C9C7824FB459A00498B01 /* PolylineDecimation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PolylineDecimation.swift; sourceTree = "<group>"; };
-		D13C9C7924FB459A00498B01 /* PolylineSimplify.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PolylineSimplify.swift; sourceTree = "<group>"; };
-		D13C9C8124FB459B00498B01 /* CubicCurveAlgorithm.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CubicCurveAlgorithm.swift; sourceTree = "<group>"; };
-		D13C9C8224FB459B00498B01 /* UIBezierPath+Interpolation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIBezierPath+Interpolation.swift"; sourceTree = "<group>"; };
 		D13C9C8324FB459B00498B01 /* OMScrollableChart+Animations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OMScrollableChart+Animations.swift"; sourceTree = "<group>"; };
-		D13C9C8524FB459B00498B01 /* Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Path.swift; sourceTree = "<group>"; };
-		D13C9C8624FB459B00498B01 /* PathElement.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PathElement.swift; sourceTree = "<group>"; };
-		D13C9C8824FB459B00498B01 /* DiscreteScaledPointsGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DiscreteScaledPointsGenerator.swift; sourceTree = "<group>"; };
 		D13C9C8A24FB459B00498B01 /* OMScrollableChart+Selection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OMScrollableChart+Selection.swift"; sourceTree = "<group>"; };
 		D13C9C8B24FB459B00498B01 /* OMScrollableChart.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OMScrollableChart.swift; sourceTree = "<group>"; };
-		D13C9C8C24FB459B00498B01 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		D13C9C8D24FB459B00498B01 /* OScrollableChart+Tooltip.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OScrollableChart+Tooltip.swift"; sourceTree = "<group>"; };
-		D13C9CA824FB460900498B01 /* PathAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathAnimation.swift; sourceTree = "<group>"; };
-		D13C9CAA24FB464F00498B01 /* CALayerHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CALayerHandler.swift; sourceTree = "<group>"; };
 		D161A515254B9EBA00DDE361 /* OMScrollableChart+PathRide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OMScrollableChart+PathRide.swift"; sourceTree = "<group>"; };
-		D164527324FE8BCD0070014F /* PolyLineInterpolation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolyLineInterpolation.swift; sourceTree = "<group>"; };
 		D192CCC5254AA6090047FBFB /* run-sonar-swift.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "run-sonar-swift.sh"; sourceTree = "<group>"; };
 		D192CCC6254AA6090047FBFB /* runcov.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = runcov.sh; sourceTree = "<group>"; };
 		D192CCC7254AA6090047FBFB /* sonar-project.properties */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "sonar-project.properties"; sourceTree = "<group>"; };
@@ -213,13 +189,9 @@
 		D12CBEED24F0078D001ADC2C /* OMScrollableChart */ = {
 			isa = PBXGroup;
 			children = (
-				D13C9C7A24FB459A00498B01 /* CA */,
-				D13C9C8824FB459B00498B01 /* DiscreteScaledPointsGenerator.swift */,
-				D13C9C8C24FB459B00498B01 /* LICENSE */,
 				D13C9C7524FB459A00498B01 /* OMBubbleTextView */,
 				7DBAA3FB253A7D50000EE535 /* Classes */,
 				7D0FC23D253A7C0900F3538E /* Layers */,
-				D161A511254B9D6700DDE361 /* Polyline */,
 				7DBAA3F9253A7C98000EE535 /* UIView+Border.swift */,
 			);
 			path = OMScrollableChart;
@@ -235,57 +207,9 @@
 			path = OMBubbleTextView;
 			sourceTree = "<group>";
 		};
-		D13C9C7724FB459A00498B01 /* PolylineSimplyfication */ = {
-			isa = PBXGroup;
-			children = (
-				04B124B12CFC9B8600E49914 /* Point3D.swift */,
-				D13C9C7824FB459A00498B01 /* PolylineDecimation.swift */,
-				D13C9C7924FB459A00498B01 /* PolylineSimplify.swift */,
-			);
-			path = PolylineSimplyfication;
-			sourceTree = "<group>";
-		};
-		D13C9C7A24FB459A00498B01 /* CA */ = {
-			isa = PBXGroup;
-			children = (
-				D13C9CAA24FB464F00498B01 /* CALayerHandler.swift */,
-			);
-			path = CA;
-			sourceTree = "<group>";
-		};
-		D13C9C8024FB459B00498B01 /* PolylineInterpolation */ = {
-			isa = PBXGroup;
-			children = (
-				D164527324FE8BCD0070014F /* PolyLineInterpolation.swift */,
-				D13C9C8124FB459B00498B01 /* CubicCurveAlgorithm.swift */,
-				D13C9C8224FB459B00498B01 /* UIBezierPath+Interpolation.swift */,
-			);
-			path = PolylineInterpolation;
-			sourceTree = "<group>";
-		};
-		D13C9C8424FB459B00498B01 /* Path */ = {
-			isa = PBXGroup;
-			children = (
-				D13C9C8524FB459B00498B01 /* Path.swift */,
-				D13C9C8624FB459B00498B01 /* PathElement.swift */,
-				D13C9CA824FB460900498B01 /* PathAnimation.swift */,
-			);
-			path = Path;
-			sourceTree = "<group>";
-		};
-		D161A511254B9D6700DDE361 /* Polyline */ = {
-			isa = PBXGroup;
-			children = (
-				D13C9C8024FB459B00498B01 /* PolylineInterpolation */,
-				D13C9C7724FB459A00498B01 /* PolylineSimplyfication */,
-			);
-			path = Polyline;
-			sourceTree = "<group>";
-		};
 		D161A520254B9F2E00DDE361 /* PathAnimations */ = {
 			isa = PBXGroup;
 			children = (
-				D13C9C8424FB459B00498B01 /* Path */,
 				D161A515254B9EBA00DDE361 /* OMScrollableChart+PathRide.swift */,
 				D13C9C8324FB459B00498B01 /* OMScrollableChart+Animations.swift */,
 			);
@@ -363,8 +287,9 @@
 		7D226A712384C3510074C44E /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1200;
-				LastUpgradeCheck = 1220;
+				LastUpgradeCheck = 1540;
 				ORGANIZATIONNAME = dsp;
 				TargetAttributes = {
 					7D226A782384C3510074C44E = {
@@ -406,7 +331,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D13C9CA524FB459B00498B01 /* LICENSE in Resources */,
 				7D226A862384C3550074C44E /* Assets.xcassets in Resources */,
 				7D226A842384C3510074C44E /* Main.storyboard in Resources */,
 			);
@@ -435,7 +359,6 @@
 			files = (
 				7D226A812384C3510074C44E /* ViewController.swift in Sources */,
 				D13C9C9124FB459B00498B01 /* OMScrollableLeadingChartRule.swift in Sources */,
-				D13C9CAB24FB464F00498B01 /* CALayerHandler.swift in Sources */,
 				7D226A7D2384C3510074C44E /* AppDelegate.swift in Sources */,
 				D13C9CA424FB459B00498B01 /* OMScrollableChart.swift in Sources */,
 				7D0FC23A253A7B5500F3538E /* OMShapeLayerLinearGradientClipPath.swift in Sources */,
@@ -444,22 +367,12 @@
 				7D0FC23C253A7B9800F3538E /* OMShapeLayerRadialGradientClipPath.swift in Sources */,
 				7D0FC234253A6F2E00F3538E /* OMBubbleShapeView.swift in Sources */,
 				D161A516254B9EBA00DDE361 /* OMScrollableChart+PathRide.swift in Sources */,
-				D13C9C9C24FB459B00498B01 /* UIBezierPath+Interpolation.swift in Sources */,
 				D13C9CA324FB459B00498B01 /* OMScrollableChart+Selection.swift in Sources */,
-				04B124B22CFC9B8600E49914 /* Point3D.swift in Sources */,
-				D13C9C9524FB459B00498B01 /* PolylineSimplify.swift in Sources */,
 				D13C9C9224FB459B00498B01 /* OMScrollableChart+Renders.swift in Sources */,
-				D13C9C9424FB459B00498B01 /* PolylineDecimation.swift in Sources */,
 				7DBAA3FA253A7C98000EE535 /* UIView+Border.swift in Sources */,
 				7D0FC236253A6F9100F3538E /* UIView+Animations.swift in Sources */,
-				D13C9C9B24FB459B00498B01 /* CubicCurveAlgorithm.swift in Sources */,
-				D164527424FE8BCD0070014F /* PolyLineInterpolation.swift in Sources */,
 				D13C9C9D24FB459B00498B01 /* OMScrollableChart+Animations.swift in Sources */,
-				D13C9C9F24FB459B00498B01 /* PathElement.swift in Sources */,
 				D13C9C9324FB459B00498B01 /* OMBubbleTextView.swift in Sources */,
-				D13C9CA924FB460900498B01 /* PathAnimation.swift in Sources */,
-				D13C9CA124FB459B00498B01 /* DiscreteScaledPointsGenerator.swift in Sources */,
-				D13C9C9E24FB459B00498B01 /* Path.swift in Sources */,
 				D13C9C9024FB459B00498B01 /* OMScrollableChart+Rules.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -511,6 +424,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -544,6 +458,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -572,6 +487,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -605,6 +521,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;

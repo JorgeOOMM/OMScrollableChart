@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import GUILib
 
 extension OMScrollableChart {
     

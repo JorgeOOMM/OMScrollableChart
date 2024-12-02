@@ -19,6 +19,7 @@
 
 import UIKit
 import Accelerate
+import GUILib
 // swiftlint:disable file_length
 // swiftlint:disable type_body_length
 
@@ -521,8 +522,8 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
             self.setNeedsDisplay()
         }
     }
-    // 1.0 -> 20.0
-    var approximationTolerance: CGFloat = 1.0 {
+    // 0.0 -> 5.0
+    var approximationTolerance: CGFloat = 0.0 {
         didSet {
             self.setNeedsLayout()
             self.setNeedsDisplay()
@@ -1136,7 +1137,7 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
                 guard tolerance != 0, points.isEmpty == false else {
                     return []
                 }
-                return  PolylineSimplify.simplifyDouglasPeuckerDecimate(points, tolerance: CGFloat(tolerance))
+                return  PolylineSimplify.simplify(points, tolerance: Float(tolerance))
             case .linregress(let elements):
                 let points = generator.makePoints(data: data, size: size)
                 let originalDataIndex: [Float] = points.enumerated().map { Float($0.offset) }
@@ -1265,7 +1266,7 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         guard tolerance != 0, points.isEmpty == false else {
             return nil
         }
-        return  PolylineSimplify.simplifyDouglasPeuckerDecimate(points, tolerance: CGFloat(tolerance))
+        return  PolylineSimplify.simplify(points, tolerance: Float(tolerance))
     }
     private func removeAllLayers() {
         self.renderLayers.forEach{$0.forEach{$0.removeFromSuperlayer()}}
