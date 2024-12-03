@@ -13,7 +13,40 @@
 // limitations under the License.
 
 import UIKit
+import GUILib
+import Accelerate
 
+protocol OMScrollableChartTouches {
+    func onTouchesBegan(_ touches: Set<UITouch>)
+    func onTouchesMoved(_ touches: Set<UITouch>)
+    func onTouchesEnded(_ touches: Set<UITouch>)
+}
+
+extension OMScrollableChart {
+    public enum RenderType: Equatable{
+        case discrete
+        case averaged(Int)
+        case simplified(CGFloat)
+        case linregress(Int)
+        var  isAveraged: Bool {
+            switch self {
+            case .averaged(_): return true
+            default: return false
+            }
+        }
+    }
+    // MARK: Default renders
+    enum Renders: Int {
+        case points
+        case polyline
+        case segments
+        case selectedPoint
+        case currentPoint
+        case bar1
+        case bar2
+        case base          //  public renders base index
+    }
+}
 
 protocol ChartProtocol {
     associatedtype ChartData
@@ -21,14 +54,12 @@ protocol ChartProtocol {
     func updateDataSourceData() -> Bool
 }
 
-
 public enum AnimationTiming: Hashable {
     case none
     case repeatn(Int)
     case infinite
     case oneShot
 }
-
 
 protocol OMScrollableChartDataSource: AnyObject {
     func dataPoints(chart: OMScrollableChart, renderIndex: Int, section: Int) -> [Float]

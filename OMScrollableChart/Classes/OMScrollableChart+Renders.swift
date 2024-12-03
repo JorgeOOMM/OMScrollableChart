@@ -14,20 +14,6 @@
 
 import UIKit
 
-extension Date {
-    var mouthTimeElapsedPercent: CGFloat {
-        let date = Date()
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.month, .day], from: date)
-        let currentDay = components.day ?? 1
-        let range = calendar.range(of: .day, in: .month, for: date)
-        let numberOfDaysInMouth = range!.count
-        let displacementInSection: CGFloat = CGFloat(1.0) / CGFloat(numberOfDaysInMouth) * CGFloat(currentDay)
-        return displacementInSection
-    }
-}
-
-
 /*
  La idea es que el usuario facilmente pueda crear representacion
  para sus datos.
@@ -72,15 +58,15 @@ extension OMScrollableChart {
                                      UIColor.greyishBlue.adjust(by: 0.7).withAlphaComponent(0.41)]
             
             let layers = createSegmentLayers(subPaths,
-                                                  lineWidth * 2,
-                                                  colors,
-                                                  strokeSegmentsColor,
-                                                  segmentsFillColor)
+                                             lineWidth * 2,
+                                             colors,
+                                             strokeSegmentsColor,
+                                             segmentsFillColor)
             
-            #if DEBUG
-                layers.enumerated().forEach { $1.name = "line segment \($0)" } // debug
-            #endif
-
+#if DEBUG
+            layers.enumerated().forEach { $1.name = "line segment \($0)" } // debug
+#endif
+            
             return layers
         case .points:
             let pointSize = CGSize(width: 8, height: 8)
@@ -112,8 +98,8 @@ extension OMScrollableChart {
     }
     var polylinePath: UIBezierPath? {
         guard  let polylinePoints =  polylinePoints,
-            let polylinePath = polylineInterpolation.asPath(points: polylinePoints) else {
-                return nil
+               let polylinePath = polylineInterpolation.asPath(points: polylinePoints) else {
+            return nil
         }
         return polylinePath
     }
@@ -138,13 +124,13 @@ extension OMScrollableChart {
         
         return [polylineLayer]
     }
-    func makeSimplified(_ data: [Float], _ renderIndex: Int, _ dataSource: OMScrollableChartDataSource) {
-        let discretePoints = makeRawPoints(data, size: contentView.bounds.size)
+    func makeSimplified(_ data: [Float], _ renderIndex: Int, _ boundsSize: CGSize, _ dataSource: OMScrollableChartDataSource) {
+        let discretePoints = makeRawPoints(data, size: boundsSize)
         
         if discretePoints.count > 0 {
             let chartData = (discretePoints, data)
             if let approximationPoints =  makeSimplifiedPoints( points: discretePoints,
-                                                                   tolerance: approximationTolerance) {
+                                                                tolerance: approximationTolerance) {
                 if approximationPoints.count > 0 {
                     self.approximationData.insert(chartData, at: renderIndex)
                     self.pointsRender.insert(approximationPoints, at: renderIndex)
@@ -163,10 +149,10 @@ extension OMScrollableChart {
         }
     }
     
-    func makeAverage(_ data: [Float], _ renderIndex: Int, _ dataSource: OMScrollableChartDataSource) {
+    func makeAverage(_ data: [Float], _ renderIndex: Int,_ boundsSize: CGSize, _ dataSource: OMScrollableChartDataSource) {
         if let points = makeAveragedPoints(data: data,
-                                                   size: contentView.bounds.size,
-                                                   elementsToAverage: numberOfElementsToAverage) {
+                                           size: boundsSize,
+                                           elementsToAverage: numberOfElementsToAverage) {
             let chartData = (points, data)
             self.averagedData.insert(chartData, at: renderIndex)
             self.pointsRender.insert(points, at: renderIndex)
@@ -184,12 +170,10 @@ extension OMScrollableChart {
     }
     
     func makeDiscrete(_ data: [Float],
-                                  _ renderIndex: Int,
-                                  _ dataSource: OMScrollableChartDataSource) {
-        //                      let linregressData = makeLinregressPoints(data: discreteData,
-        //                                                                size: contentSize,
-        //                                                                numberOfElements: 1)
-        let points = makeRawPoints(data, size: contentView.bounds.size)
+                      _ renderIndex: Int,
+                      _ boundsSize: CGSize, _ dataSource: OMScrollableChartDataSource) {
+        
+        let points = makeRawPoints(data, size: boundsSize)
         if points.count > 0 {
             let chartData = (points, data)
             self.discreteData.insert(chartData, at: renderIndex)
@@ -210,14 +194,15 @@ extension OMScrollableChart {
     }
     
     private func makeLinregress(_ data: [Float],
-                                    _ renderIndex: Int,
-                                    _ dataSource: OMScrollableChartDataSource) {
-        let points = makeRawPoints(data, size: contentView.bounds.size)
-        if points.count > 0{
+                                _ renderIndex: Int,
+                                _ boundsSize: CGSize,
+                                _ dataSource: OMScrollableChartDataSource) {
+        let points = makeRawPoints(data, size: boundsSize)
+        if points.count > 0 {
             let chartData = (points, data)
             let linregressData = makeLinregressPoints(data: chartData,
-                                                      size: contentView.bounds.size,
-                                                      numberOfElements: points.count + 1,
+                                                      size: boundsSize,
+                                                      numberOfElements: self.numberOfRegressValues,
                                                       renderIndex: renderIndex)
             self.linregressData.insert(linregressData, at: renderIndex)
             self.pointsRender.insert(linregressData.0, at: renderIndex)
@@ -236,20 +221,34 @@ extension OMScrollableChart {
         }
     }
     
+    func regressBondsSize(_ renderIndex: Int) -> CGSize {
+        let size = contentView.bounds.size
+        let numOfPoints = CGFloat(self.renderDataPoints[renderIndex].count)
+        let regressWidth = (self.sectionWidth * CGFloat(self.numberOfRegressValues))
+        let width = numOfPoints * self.sectionWidth + regressWidth
+        return  CGSize(width: width,
+                       height: size.height)
+    }
+    
+    func discreteBondsSize(_ renderIndex: Int) -> CGSize {
+        let size = contentView.bounds.size
+        return CGSize(width: CGFloat(self.renderDataPoints[renderIndex].count) * self.sectionWidth, height: size.height)
+    }
+    
     /// renderLayers
     /// - Parameters:
     ///   - renderIndex: render index
     ///   - renderAs: RenderData
-    func renderLayers(_ renderIndex: Int, renderAs: OMScrollableChart.RenderType) {
+    func renderLayers(_ renderIndex: Int, renderAs: RenderType) {
         guard let dataSource = dataSource else {
             return
         }
         let currentRenderData = renderDataPoints[renderIndex]
         switch renderAs {
-        case .simplified: makeSimplified(currentRenderData, renderIndex, dataSource)
-        case .averaged: makeAverage(currentRenderData, renderIndex, dataSource)
-        case .discrete: makeDiscrete(currentRenderData, renderIndex, dataSource)
-        case .linregress: makeLinregress(currentRenderData, renderIndex, dataSource)
+        case .simplified: makeSimplified(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
+        case .averaged: makeAverage(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
+        case .discrete: makeDiscrete(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
+        case .linregress: makeLinregress(currentRenderData, renderIndex, regressBondsSize(renderIndex), dataSource)
         }
         self.renderType.insert(renderAs, at: renderIndex)
     }
@@ -377,7 +376,7 @@ extension OMScrollableChart {
             shapeSegmentLayer.lineWidth     = lineWidth
             shapeSegmentLayer.path          = path.cgPath
             let box = path.bounds
-
+            
             shapeSegmentLayer.position      = box.origin
             shapeSegmentLayer.fillColor     = color.darker.withAlphaComponent(0.12).cgColor
             shapeSegmentLayer.bounds        =  box //.insetBy(dx: -(lineWidth), dy: -(lineWidth))
@@ -386,25 +385,13 @@ extension OMScrollableChart {
             shapeSegmentLayer.lineCap       = .square
             shapeSegmentLayer.lineJoin      = .round
             shapeSegmentLayer.opacity       = 1.0
-
+            
             shapeSegmentLayer.setGlow( with: color)
             
             layers.append(shapeSegmentLayer)
             shapeSegmentLayer.setNeedsLayout()
-        
+            
         }
         return layers
-    }
-}
-
-
-extension CALayer {
-    public func setGlow(with color: UIColor) {
-        masksToBounds = false
-        shadowColor =  color.cgColor
-        shadowOpacity = 1
-        shadowRadius  = 4.0
-        shadowOpacity = 0.9
-        shadowOffset  = CGSize(width: 0,height: 3)
     }
 }

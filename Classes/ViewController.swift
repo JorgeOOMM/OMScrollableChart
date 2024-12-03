@@ -18,7 +18,10 @@ let chartPoints: [Float] =   [1510, 100,
                               1200, 13000,
                              15000, -1500,
                              800, 1000,
-                             6000, 1300]
+                             6000, 1300, 
+                              1510, 100,
+                              3000, 100,
+                              1200, 13000,]
 
 
 class ViewController: UIViewController, OMScrollableChartDataSource, OMScrollableChartRenderableProtocol, OMScrollableChartRenderableDelegateProtocol {
@@ -157,7 +160,7 @@ class ViewController: UIViewController, OMScrollableChartDataSource, OMScrollabl
         return 2
     }
     func numberOfSectionsPerPage(chart: OMScrollableChart) -> Int {
-        return 6
+        return 12
     }
     var opacityTableLine: [CGFloat] = [1, 1, 1, 1, 1, 0, 0]
     var opacityTableBar: [CGFloat]  = [0, 0, 0, 0, 0, 1, 1]
@@ -187,15 +190,15 @@ class ViewController: UIViewController, OMScrollableChartDataSource, OMScrollabl
         segmentInterpolation.insertSegment(withTitle: "cubicCurve", at: 2, animated: false)
         segmentInterpolation.insertSegment(withTitle: "hermite", at: 3, animated: false)
         segmentInterpolation.insertSegment(withTitle: "catmullRom", at: 4, animated: false)
-        segmentInterpolation.selectedSegmentIndex = 4 // catmullRom
-
+        segmentInterpolation.selectedSegmentIndex = 0 // catmullRom
+        chart.polylineInterpolation = .none
         
         segmentTypeOfData.removeAllSegments()
         segmentTypeOfData.insertSegment(withTitle: "discrete", at: 0, animated: false)
         segmentTypeOfData.insertSegment(withTitle: "averaged", at: 1, animated: false)
         segmentTypeOfData.insertSegment(withTitle: "simplify", at: 2, animated: false)
         segmentTypeOfData.insertSegment(withTitle: "regression", at: 3, animated: false)
-        segmentTypeOfData.selectedSegmentIndex = 0 // catmullRom
+        segmentTypeOfData.selectedSegmentIndex = 0 // discrete
         
         toleranceSlider.maximumValue  = 20
         toleranceSlider.minimumValue  = 1

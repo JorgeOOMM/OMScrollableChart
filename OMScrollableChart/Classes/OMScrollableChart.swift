@@ -37,94 +37,13 @@ extension UIColor {
     }
 }
 
-
-extension UIScrollView {
-    func zoom(toPoint zoomPoint : CGPoint, scale : CGFloat, animated : Bool) {
-        var scale = CGFloat.minimum(scale, maximumZoomScale)
-        scale = CGFloat.maximum(scale, self.minimumZoomScale)
-        
-        var translatedZoomPoint : CGPoint = .zero
-        translatedZoomPoint.x = zoomPoint.x + contentOffset.x
-        translatedZoomPoint.y = zoomPoint.y + contentOffset.y
-        
-        let zoomFactor = 1.0 / zoomScale
-        
-        translatedZoomPoint.x *= zoomFactor
-        translatedZoomPoint.y *= zoomFactor
-        
-        var destinationRect : CGRect = .zero
-        destinationRect.size.width = frame.width / scale
-        destinationRect.size.height = frame.height / scale
-        destinationRect.origin.x = translatedZoomPoint.x - destinationRect.width * 0.5
-        destinationRect.origin.y = translatedZoomPoint.y - destinationRect.height * 0.5
-        
-        if animated {
-            UIView.animate(withDuration: 0.55, delay: 0.0, usingSpringWithDamping: 1.0, initialSpringVelocity: 0.6, options: [.allowUserInteraction], animations: {
-                self.zoom(to: destinationRect, animated: false)
-            }, completion: {
-                completed in
-                if let delegate = self.delegate, delegate.responds(to: #selector(UIScrollViewDelegate.scrollViewDidEndZooming(_:with:atScale:))), let view = delegate.viewForZooming?(in: self) {
-                    delegate.scrollViewDidEndZooming!(self, with: view, atScale: scale)
-                }
-            })
-        } else {
-            zoom(to: destinationRect, animated: false)
-        }
-    }
-}
-
 struct ScrollChartConfiguration {
     static let animationPointsClearOpacityKey: String = "animationPointsClearOpacityKey"
-    
     static let maxNumberOfRenders: Int = 10
-
-}
-public extension CGPoint {
-    
-    enum CoordinateSide {
-        case topLeft, top, topRight, right, bottomRight, bottom, bottomLeft, left
-    }
-    
-    static func unitCoordinate(_ side: CoordinateSide) -> CGPoint {
-        switch side {
-        case .topLeft:      return CGPoint(x: 0.0, y: 0.0)
-        case .top:          return CGPoint(x: 0.5, y: 0.0)
-        case .topRight:     return CGPoint(x: 1.0, y: 0.0)
-        case .right:        return CGPoint(x: 0.0, y: 0.5)
-        case .bottomRight:  return CGPoint(x: 1.0, y: 1.0)
-        case .bottom:       return CGPoint(x: 0.5, y: 1.0)
-        case .bottomLeft:   return CGPoint(x: 0.0, y: 1.0)
-        case .left:         return CGPoint(x: 1.0, y: 0.5)
-        }
-    }
-}
-
-extension CATransaction {
-    class func withDisabledActions<T>(_ body: () throws -> T) rethrows -> T {
-        let actionsWereDisabled = CATransaction.disableActions()
-        CATransaction.setDisableActions(true)
-        defer {
-            CATransaction.setDisableActions(actionsWereDisabled)
-        }
-        return try body()
-    }
-}
-
-extension Array where Element: Equatable {
-    func indexes(of element: Element) -> [Int] {
-        return self.enumerated().filter({ element == $0.element }).map({ $0.offset })
-    }
-}
-extension Array {
-    func chunked(into size: Int) -> [[Element]] {
-        return stride(from: 0, to: count, by: size).map {
-            Array(self[$0 ..< Swift.min($0 + size, count)])
-        }
-    }
 }
 
 @objcMembers
-public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtocol, CAAnimationDelegate {
+public class OMScrollableChart: UIScrollView, ChartProtocol, CAAnimationDelegate {
     private var pointsLayer: OMGradientShapeClipLayer =  OMGradientShapeClipLayer()
     var polylineLayer: OMGradientShapeClipLayer =  OMGradientShapeClipLayer()
     var dashLineLayers = [OMGradientShapeClipLayer]()
@@ -136,22 +55,43 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
     weak var renderSource: OMScrollableChartRenderableProtocol?
     weak var renderDelegate: OMScrollableChartRenderableDelegateProtocol?
     
+    var oldFrame: CGRect = .zero
+    var linFunction: (slope: Float, intercept: Float)?
+    var numberOfRegressValues: Int = 1
+    var renderLayers: [[OMGradientShapeClipLayer]] = []
+    var pointsRender: [[CGPoint]] = []
+    var renderDataPoints: [[Float]] = []
+    internal var renderType: [RenderType] = []
+    var averagedData: [ChartData?] = []
+    var linregressData: [ChartData?] = []
+    var discreteData:  [ChartData?] = []
+    var approximationData:  [ChartData?] = []
+    
+    // cache hashed frame + points
+    var layoutCache = [String: Any]()
+    var isLayoutCacheActive: Bool = true
+    var cacheTrackingLayout: Int = 0
+    var isScrollAnimation: Bool = true
+    var isScrollAnimnationDone: Bool = false
+    let scrollingProgressDuration: TimeInterval = 1.2
+    
     var isAnimatePointsClearOpacity: Bool = true
     var isAnimatePointsClearOpacityDone: Bool = false
     var rideAnim: CAAnimation? = nil
     var layerToRide: CALayer?
     var ridePath: Path?
+    var currentLocale: Locale = Locale(identifier: "es_ES")
     
     // MARK: - DashLineManager -
-    public lazy var dashlines: DashLineManager = {
-        let lines = DashLineManager(contentView: contentView)
+    public lazy var dashlines: OMScrollableChartDashLineManager = {
+        let lines = OMScrollableChartDashLineManager(contentView: contentView)
         return lines
     }()
     
     
     // MARK: - RuleManager -
-    public lazy var ruleManager: RuleManager = {
-        let rule = RuleManager(chart: self)
+    public lazy var ruleManager: OMScrollableChartRuleManager = {
+        let rule = OMScrollableChartRuleManager(chart: self)
         return rule
     }()
     
@@ -161,7 +101,7 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         self.addSubview(lazyContentView)
         return lazyContentView
     }()
-
+    
     // MARK: - Tooltip -
     var tooltip: OMBubbleTextView = OMBubbleTextView()
     // Scaled generator
@@ -191,8 +131,8 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         }
     }
     var scaledPointsGenerator =
-        [ScaledPointsGenerator](repeating: ScaledPointsGenerator([], size: .zero, insets: UIEdgeInsets(top: 0, left: 0,bottom: 0,right: 0)),
-                                count: ScrollChartConfiguration.maxNumberOfRenders)
+    [ScaledPointsGenerator](repeating: ScaledPointsGenerator([], size: .zero, insets: UIEdgeInsets(top: 0, left: 0,bottom: 0,right: 0)),
+                            count: ScrollChartConfiguration.maxNumberOfRenders)
     // MARK: - Data Bounds -
     // For example: mouths : 6
     var numberOfSectionsPerPage: Int {
@@ -222,14 +162,11 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         currencyFormatter.numberStyle = .decimal
         currencyFormatter.maximumFractionDigits = 0
         // localize to your grouping and decimal separator
-        currencyFormatter.locale = Locale(identifier: "es_ES")
+        currencyFormatter.locale = self.currentLocale
         return currencyFormatter
     }()
     
-    public override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        updateRendersOpacity()
-    }
+
     
     lazy var currencyFormatter: NumberFormatter = {
         let currencyFormatter = NumberFormatter()
@@ -237,7 +174,7 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         currencyFormatter.numberStyle = .currency
         currencyFormatter.maximumFractionDigits = 0
         // localize to your grouping and decimal separator
-        currencyFormatter.locale = Locale(identifier: "es_ES")
+        currencyFormatter.locale = self.currentLocale
         return currencyFormatter
     }()
     
@@ -281,7 +218,7 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         }
     }
     // MARK: - Rules -
-
+    
     var rulesMarks: [Float] {
         return ruleManager.rulesMarks.sorted(by: { !($0 > $1) })
     }
@@ -335,45 +272,6 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
     var selectedOpacy: Float = 1.0
     var unselectedOpacy: Float = 0
     var unselectedColor = UIColor.clear
-//    private var contentOffsetKOToken: NSKeyValueObservation?
-//    // MARK: -  register/unregister notifications and KO
-//    private func registerNotifications() {
-//        #if swift(>=4.2)
-//        let notificationName = UIDevice.orientationDidChangeNotification
-//        #else
-//        let notificationName = NSNotification.Name.UIDeviceOrientationDidChange
-//        #endif
-//        NotificationCenter.default.addObserver(self,
-//                                               selector: #selector(handleRotation),
-//                                               name: notificationName,
-//                                               object: nil)
-//
-//        contentOffsetKOToken = self.observe(\.contentOffset) { [weak self] object, change in
-//            // the `[weak self]` is to avoid strong reference cycle; obviously,
-//            // if you don't reference `self` in the closure, then `[weak self]` is not needed
-//            //print("contentOffset is now \(object.contentOffset)")
-//            guard let selfWeak = self else {
-//                return
-//            }
-//            for layer in selfWeak.dashLineLayers {
-//                CATransaction.withDisabledActions {
-//                    var layerFrame = layer.frame
-//                    layerFrame.origin.y = object.contentOffset.y
-//                    layerFrame.origin.x = object.contentOffset.x
-//                    layer.frame = layerFrame
-//                }
-//            }
-//        }
-//    }
-//    // Unregister the ´orientationDidChangeNotification´ notification
-//    private func unregisterNotifications () {
-//        NotificationCenter.default.removeObserver(self)
-//    }
-//    deinit {
-//        unregisterNotifications()
-//        contentOffsetKOToken?.invalidate()
-//        contentOffsetKOToken = nil
-//    }
     
     // MARK: - KVO -
     
@@ -383,16 +281,16 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
     // MARK: -  register/unregister notifications and KVO
     
     private func registerNotifications() {
-        #if swift(>=4.2)
+#if swift(>=4.2)
         let notificationName = UIDevice.orientationDidChangeNotification
-        #else
+#else
         let notificationName = NSNotification.Name.UIDeviceOrientationDidChange
-        #endif
+#endif
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(handleRotation),
                                                name: notificationName,
                                                object: nil)
-
+        
         contentOffsetKOToken = observe(\.contentOffset) { [weak self] object, _ in
             // the `[weak self]` is to avoid strong reference cycle; obviously,
             // if you don't reference `self` in the closure, then `[weak self]` is not needed
@@ -410,13 +308,12 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         }
         
         contentSizeKOToken = observe(\.contentSize) { [weak self] object, _ in
-//             the `[weak self]` is to avoid strong reference cycle; obviously,
-//             if you don't reference `self` in the closure, then `[weak self]` is not needed
-            
-             print("contentSize is now \(object.contentSize) \(object.bounds)")
-                        guard let selfWeak = self else {
-                            return
-                        }
+            //             the `[weak self]` is to avoid strong reference cycle; obviously,
+            //             if you don't reference `self` in the closure, then `[weak self]` is not needed
+            guard let selfWeak = self else {
+                return
+            }
+            print("contentSize is now \(object.contentSize) \(object.bounds)")
         }
     }
     
@@ -438,23 +335,6 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
     @objc func handleRotation() {
         self.updateContentSize()
     }
-//    // Setup all the view/subviews
-//    func setupView() {
-//        self.registerNotifications()
-//        // Setup the UIScrollView
-//        self.delegate = self
-//        if #available(iOS 11, *) {
-//            self.contentInsetAdjustmentBehavior = .never
-//        }
-////        self.createSuplementaryRules()
-//        self.setupTooltip()
-//
-//        //        if isScreenLine {
-//        //            self.setupTouchScreenLineLayer()
-//        //        }
-//    }
-    
-    
     // Setup all the view/subviews
     func setupView() {
         registerNotifications()
@@ -466,44 +346,9 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         // configure
         ruleManager.configure(with: fontRootRuleColor,
                               and: fontFooterRuleColor)
-  
-        setupTooltip()
-
         
-        //        if isScreenLine {
-        //            self.setupTouchScreenLineLayer()
-        //        }
+        setupTooltip()
     }
-    
-    //    //
-    //    var isScreenLine: Bool = false
-    //    var touchScreenLineLayerColor = UIColor.clear
-    //    var touchScreenLineWidth: CGFloat = 0.5
-    //    var touchScreenLineLayerPath: UIBezierPath?
-    //    var showScreenLineLayer = false
-    //    var touchScreenLineLayer: OMGradientShapeClipLayer = OMGradientShapeClipLayer()
-    //
-    //    func setupTouchScreenLineLayer() {
-    //        touchScreenLineLayer.lineJoin      = CAShapeLayerLineJoin.round
-    //        touchScreenLineLayer.shadowColor   = UIColor.gray.cgColor
-    //        //lineLayer.shadowOffset  = circleShadowOffset
-    //        touchScreenLineLayer.shadowOpacity = 0.7
-    //        touchScreenLineLayer.shadowRadius  = 1.0
-    //        self.contentView.layer.addSublayer(touchScreenLineLayer)
-    //    }
-    //
-    //    private func updateLineSelectionLayer(_ location: CGPoint) {
-    //        guard showScreenLineLayer else {
-    //            return
-    //        }
-    //        let linePath = UIBezierPath()
-    //        linePath.move(to: CGPoint( x: location.x, y: topViewHeight))
-    //        linePath.addLine(to: CGPoint( x: location.x, y: self.footerRule!.frame.origin.y ))
-    //        touchScreenLineLayer.strokeColor = touchScreenLineLayerColor.cgColor
-    //        touchScreenLineLayer.lineWidth = touchScreenLineWidth
-    //        touchScreenLineLayer.path = linePath.cgPath
-    //    }
-    
     
     func contentSizeHeight() -> CGFloat {
         return contentSize.height - ruleManager.footerViewHeight
@@ -525,91 +370,6 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         updateLayout()
     }
     
-    // MARK: - Rotation support -
-//    private func updateContentSize() {
-//        self.layoutIfNeeded()
-//        let newValue = CGSize(width: self.bounds.width * numberOfPages, height: self.bounds.height)
-//        if self.contentSize != newValue {
-//            self.contentSize = newValue
-//
-//            contentView.frame = CGRect(x: 0,
-//                                       y: 0,
-//                                       width: self.contentSize.width,
-//                                       height: self.contentSize.height - footerViewHeight)
-//
-//
-//            flowDelegate?.contentSizeChanged(contentSize: newValue)
-//
-//            scaledPointsGenerator.forEach {$0.size = contentView.bounds.size}
-//
-//            print("ContentSize chaged frame for: \(self.contentView.bounds)")
-//
-//            self.updateLayout(ignoreLayout: true)
-//        }
-//    }
-
-    
-    //
-    //    var isDirtyDataSource: Bool = true
-    //    func updateDataSourceData() -> Bool {
-    //        if let dataSource = dataSource {
-    //            if let render = self.renderSource, render.numberOfRenders > 0  {
-    //                var dataPointsRenderNewDataPoints = [[Float]]()
-    //                // get the layers.
-    //                for index in 0..<render.numberOfRenders {
-    //                    let dataPoints = dataSource.dataPoints(chart: self, renderIndex: index, section: 0)
-    //                    if !dataPointsRender.contains(dataPoints) {
-    //                        isDirtyDataSource = true
-    //                    }
-    //                    dataPointsRenderNewDataPoints.insert(dataPoints, at: index)
-    //                }
-    //                if isDirtyDataSource {
-    //                    dataPointsRender.removeAll()
-    //                    dataPointsRender.append(contentsOf: dataPointsRenderNewDataPoints)
-    //                } else {
-    //                    isDirtyDataSource = false
-    //                }
-    //            } else {
-    //                // Only exist one render.
-    //                let dataPoints = dataSource.dataPoints(chart: self,
-    //                                                       renderIndex: 0,
-    //                                                       section: 0)
-    //                if !dataPointsRender.contains(dataPoints) {
-    //                    isDirtyDataSource = true
-    //                }
-    //                if isDirtyDataSource {
-    //                    dataPointsRender.removeAll()
-    //                    dataPointsRender.insert(dataPoints, at: 0)
-    //                } else {
-    //                    isDirtyDataSource = false
-    //                }
-    //            }
-    //            if !isDirtyDataSource {
-    //                print("isDirtyData \(isDirtyDataSource)")
-    //            }
-    //            //let numberOfSections = dataSource.numberOfSections(chart: self)
-    //
-    //            if let footerRule = self.footerRule as? OMScrollableChartRuleFooter {
-    //                if let texts =  dataSource.footerSectionsText(chart: self) {
-    //                    if texts != footerRule.footerSectionsText {
-    //                        footerRule.footerSectionsText = texts
-    //                        print("footerSectionsTextChanged \(isDirtyDataSource)")
-    //                    }
-    //                }
-    //            }
-    //            let oldNumberOfPages = numberOfPages
-    //            let newNumberOfPages = dataSource.numberOfPages(chart: self)
-    //            if oldNumberOfPages != newNumberOfPages {
-    //                print("numberOfPagesChanged \(isDirtyDataSource)")
-    //                // _delegate.numberOfPagesChanged()
-    //            }
-    //            self.numberOfPages = newNumberOfPages
-    //            return true
-    //        }
-    //        return false
-    //    }
-    //
-    
     func queryDataSourceForRenderDataPoints(_ dataSource: OMScrollableChartDataSource) -> [[Float]] {
         var dataPointsRenderNewDataPoints = [[Float]]()
         if let render = self.renderSource, render.numberOfRenders > 0  {
@@ -623,7 +383,7 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
                     scaledPointsGenerator[index].data = dataPoints
                     flowDelegate?.dataPointsChanged(dataPoints: dataPoints, for: index)
                 }
-       
+                
                 dataPointsRenderNewDataPoints.insert(dataPoints, at: index)
             }
         } else {
@@ -641,65 +401,6 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         return dataPointsRenderNewDataPoints
     }
     
-   
-    public class OMScrollableChartRuleFlow: OMScrollableChartRuleDelegate {
-        public func footerSectionDidTouchUpInsideMove(section: CGFloat, selectedView: UIView?, location: CGPoint) {
-            print("[FLOW] footerSectionDidTouchUpInsideMove", section)
-        }
-        
-        public func deviceRotation() {
-            print("[FLOW] deviceRotation")
-        }
-
-        public func footerSectionDidTouchUpInside(section: CGFloat, selectedView: UIView?) {
-            print("[FLOW] footerSectionDidTouchUpInside", section)
-        }
-        
-        public func footerSectionDidTouchUpInsideRelease(section: CGFloat, selectedView: UIView?) {
-            print("[FLOW] footerSectionDidTouchUpInsideRelease", section)
-        }
-        
-        public func updateRenderLayers(index: Int, with layers: [CALayer]) {
-            print("[FLOW] updateRenderLayers", Renders(rawValue: index)!, layers.count)
-        }
-        
-        public func updateRenderData(index: Int, data: Data?) {
-            print("[FLOW] updateRenderData", Renders(rawValue: index)!, data)
-        }
-        
-        public func renderDataTypeChanged(in dataOfRender: RenderType, for index: Int) {
-            print("[FLOW] renderDataTypeChanged", dataOfRender, Renders(rawValue: index)!)
-        }
-        public func regeneratingRendersLayers() {
-            print("[FLOW] regeneratingRendersLayers")
-        }
-      
-        
-        public func drawRootRuleText(in frame: CGRect, text: NSAttributedString) {
-            print("[FLOW] drawRootRuleText", frame)
-        }
-        
-        public func footerSectionsTextChanged(texts: [String]) {
-            print("[FLOW] footerSectionsTextChanged", texts)
-        }
-        
-        public func numberOfPagesChanged(pages: CGFloat) {
-            print("[FLOW] numberOfPagesChanged", pages)
-        }
-        
-        public func contentSizeChanged(contentSize: CGSize) {
-            print("[FLOW] contentSizeChanged", contentSize)
-        }
-        
-        public func frameChanged(frame: CGRect) {
-            print("[FLOW] frameChanged", frame)
-        }
-        
-        public func dataPointsChanged(dataPoints: [Float], for index: Int) {
-            print("[FLOW] dataPointsChanged", Renders(rawValue: index)!)
-        }
-    }
-
     var flowDelegate: OMScrollableChartRuleDelegate? = OMScrollableChartRuleFlow()
     
     func updateDataSourceData() -> Bool {
@@ -726,57 +427,15 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         return false
     }
     
-    //    private func updatePolylineLayer(_ polylinePath: UIBezierPath) {
-    //        //
-    //        polylineLayer.path          = polylinePath.cgPath
-    //        polylineLayer.fillColor     = UIColor.clear.cgColor
-    //        polylineLayer.strokeColor   = self.lineColor.withAlphaComponent(0.8).cgColor
-    //        polylineLayer.lineWidth     = self.lineWidth
-    //        //
-    //        polylineLayer.shadowColor   = UIColor.black.cgColor
-    //        polylineLayer.shadowOffset  = CGSize(width: 0, height:  self.lineWidth * 2)
-    //        polylineLayer.shadowOpacity = 0.5
-    //        polylineLayer.shadowRadius  = 6.0
-    //        //polylineLayer.isHidden = false
-    //    }
-    //    func updatePolylineLayerIfNeeded() {
-    //        guard  let polylinePath = polylinePath else {
-    //            return
-    //        }
-    //        updatePolylineLayer(polylinePath)
-    //    }
-    /// addDashLineLayer
-    /// - Parameters:
-    ///   - point: CGPoint
-    ///   - endPoint: CGPoint
-    ///   - stroke: UIColor
-    ///   - lineWidth: CGFloat
-    ///   - pattern: [NSNumber]?
-//    func addDashLineLayerFromRuleMark(point: CGPoint,
-//                                      endPoint: CGPoint,
-//                                      stroke: UIColor? = nil,
-//                                      lineWidth: CGFloat? = nil,
-//                                      pattern: [NSNumber]? = nil) {
-//        let lineLayer = OMGradientShapeClipLayer()
-//        lineLayer.strokeColor = stroke?.cgColor ?? dashLineColor
-//        lineLayer.lineWidth   = lineWidth ?? dashLineWidth
-//        lineLayer.lineDashPattern = pattern ?? dashPattern as [NSNumber]
-//        let path = CGMutablePath()
-//        path.addLines(between: [point, endPoint])
-//        lineLayer.path = path
-//        lineLayer.name = "Dash"
-//        dashLineLayers.append(lineLayer)
-//        contentView.layer.addSublayer(lineLayer)
-//    }
     /// projectLineStrokeGradient
     /// - Parameters:
     ///   - internalPoints: [CGPoints]]
     ///   - ctx: CGContext
     ///   - gradient: CGGradient
     private func projectLineStrokeGradient(_ ctx: CGContext,
-                                               gradient: CGGradient,
-                                               internalPoints: [CGPoint],
-                                               lineWidth: CGFloat) {
+                                           gradient: CGGradient,
+                                           internalPoints: [CGPoint],
+                                           lineWidth: CGFloat) {
         ctx.saveGState()
         for index in 0..<internalPoints.count - 1  {
             var start: CGPoint = internalPoints[index]
@@ -796,11 +455,11 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         ctx.restoreGState()
     }
     private func strokeGradient( ctx: CGContext?,
-                                     layer: CAShapeLayer,
-                                     points: [CGPoint]?,
-                                     color: UIColor,
-                                     lineWidth: CGFloat,
-                                     fadeFactor: CGFloat = 0.4)  {
+                                 layer: CAShapeLayer,
+                                 points: [CGPoint]?,
+                                 color: UIColor,
+                                 lineWidth: CGFloat,
+                                 fadeFactor: CGFloat = 0.4)  {
         if  let ctx = ctx {
             let locations =  [0, fadeFactor, 1 - fadeFactor, 1]
             let gradient = CGGradient(colorsSpace: nil,
@@ -827,100 +486,11 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
             }
         }
     }
+}
 
+extension OMScrollableChart {
+    
     public typealias ChartData = (points: [CGPoint], data: [Float])
-    
-    public enum RenderType: Equatable{
-        case discrete
-        case averaged(Int)
-        case simplified(CGFloat)
-        case linregress(Int)
-        func makePoints( data: [Float], for size: CGSize, generator: ScaledPointsGenerator) -> [CGPoint] {
-            switch self {
-            case .discrete:
-                return generator.makePoints(data: data, size: size)
-            case .averaged(let elementsToAverage):
-                if elementsToAverage != 0 {
-                    var result: Float = 0
-                    let positives = data.map{$0>0 ? $0: abs($0)}
-                    //            let negatives = data.filter{$0<0}
-                    //
-                    //            for negative in negatives {
-                    //               let i = data.indexes(of: negatives)
-                    //            }
-                    
-                    let chunked = positives.chunked(into: elementsToAverage)
-                    let averagedData: [Float] = chunked.map {
-                        vDSP_meanv($0, 1, &result, vDSP_Length($0.count));
-                        return result
-                    }
-                    //let averagedData = groupAverage(positives, numberOfElements: positives.count)
-                    return generator.makePoints(data: averagedData, size: size)
-                }
-            case .simplified(let tolerance):
-                let points = generator.makePoints(data: data, size: size)
-                guard tolerance != 0, points.isEmpty == false else {
-                    return []
-                }
-                return  PolylineSimplify.simplify(points, tolerance: Float(tolerance))
-            case .linregress(let elements):
-                let points = generator.makePoints(data: data, size: size)
-                let originalDataIndex: [Float] = points.enumerated().map { Float($0.offset) }
-                //        let max = originalData.points.max(by: { $0.x < $1.x})!
-                //        let distance = mean(originalDataX.enumerated().compactMap{
-                //            if $0.offset > 0 {
-                //                return originalDataX[$0.offset-1].distance(to: $0.element)
-                //            }
-                //            return nil
-                //        })
-                
-                
-                // let results = originalDataX//.enumerated().map{ return originalDataX.prefix($0.offset+1).reduce(.zero, +)}
-                
-                let linFunction: (slope: Float, intercept: Float) = Stadistics.linregress(originalDataIndex, data)
-                
-                // var index = 0
-                let result: [Float] = [Float].init(repeating: 0, count: elements)
-                
-                let resulLinregress = result.enumerated().map{
-                    linFunction.slope * Float($0.offset) + linFunction.intercept }
-                //        for item in result  {
-                //            result[index] = dataForIndex(index:  Float(index))
-                //            index += 1
-                //        }
-                //
-                // add the new points
-                let newData = data + resulLinregress
-                return generator.makePoints(data: newData, size: size)
-            }
-            
-            return []
-        }
-        
-        var isAveraged: Bool {
-            switch self {
-            case .averaged(_):
-               return true
-            default:
-                return false
-            }
-        }
-    }
-
-    
-    var linFunction: (slope: Float, intercept: Float)?
-    
-    // MARK: Default renders
-    enum Renders: Int {
-        case points
-        case polyline
-        case segments
-        case selectedPoint
-        case currentPoint
-        case bar1
-        case bar2
-        case base          //  public renders base index
-    }
     
     var coreGenerator: ScaledPointsGenerator? {
         return scaledPointsGenerator[Renders.polyline.rawValue]
@@ -943,16 +513,6 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
     var renderSelectedPointsLayer: CAShapeLayer? {
         return renderLayers.isEmpty == false ? renderLayers[Renders.selectedPoint.rawValue].first : nil
     }
-    
-    var renderLayers: [[OMGradientShapeClipLayer]] = []
-    var pointsRender: [[CGPoint]] = []
-    var renderDataPoints: [[Float]] = []
-    internal var renderType: [RenderType] = []
-    var averagedData: [ChartData?] = []
-    var linregressData: [ChartData?] = []
-    var discreteData:  [ChartData?] = []
-    var approximationData:  [ChartData?] = []
-    
     func minPoint(in renderIndex: Int) -> CGPoint? {
         return pointsRender[renderIndex].max(by: {$0.x > $1.x})
     }
@@ -999,9 +559,6 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         self.renderLayers = []
     }
     // MARK: - Layout Cache -
-    // cache hashed frame + points
-    var layoutCache = [String: Any]()
-    var isLayoutCacheActive: Bool = true
     
     var visibleLayers: [CAShapeLayer] {
         return allRendersLayers.filter({$0.opacity == 1.0})
@@ -1026,8 +583,8 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
     }
     
     private func performPositionAnimation(_ layer: OMGradientShapeClipLayer,
-                                              _ animation: CAAnimation,
-                                              layerOpacity: CGFloat) {
+                                          _ animation: CAAnimation,
+                                          layerOpacity: CGFloat) {
         let anima = animationWithFadeGroup(layer,
                                            toValue: layerOpacity,
                                            animations: [animation])
@@ -1039,7 +596,7 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
     }
     
     private func performOpacityAnimation(_ layer: OMGradientShapeClipLayer,
-                                             _ animation: CAAnimation) {
+                                         _ animation: CAAnimation) {
         
         layer.add(animation, forKey: "renderOpacityAnimation", withCompletion: nil)
     }
@@ -1085,11 +642,11 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
             // Get the render data. ex: discrete / approx / averaged / regression for each render
             let dataOfRender = dataSource.dataOfRender(chart: self, renderIndex: renderIndex)
             // Do render layers
-//            if renderType.count > renderIndex {
-//                if !(renderType[renderIndex] == dataOfRender) {
+            //            if renderType.count > renderIndex {
+            //                if !(renderType[renderIndex] == dataOfRender) {
             flowDelegate?.renderDataTypeChanged(in: dataOfRender, for: renderIndex)
-//                }
-//            }
+            //                }
+            //            }
             renderLayers(renderIndex, renderAs: dataOfRender)
         }
         // Add layers
@@ -1105,7 +662,7 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         }
         return false
     }
-
+    
     
     /// layoutRenders
     /// - Parameters:
@@ -1152,7 +709,7 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
                        delay: delay,
                        options: .curveEaseInOut,
                        animations: {
-                self.contentOffset.x = self.frame.size.width * CGFloat(1)
+            self.contentOffset.x = self.frame.size.width * CGFloat(1)
         }, completion: { completed in
             if self.isAnimatePointsClearOpacity &&
                 !self.isAnimatePointsClearOpacityDone {
@@ -1247,13 +804,10 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
             }
         }
     }
-    var cacheTrackingLayout: Int = 0
+
     var isCacheStable: Bool {
         return cacheTrackingLayout > 1
     }
-    var isScrollAnimation: Bool = true
-    var isScrollAnimnationDone: Bool = false
-    let scrollingProgressDuration: TimeInterval = 1.2
     
     /// Update the chart layout
     /// - Parameter forceLayout: Bool
@@ -1284,18 +838,18 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
         if allDataPointsRender.isEmpty == false {
             print("\(CALayer.isAnimatingLayers) animations running")
             if CALayer.isAnimatingLayers <= 1  || ignoreLayout {
-                print("Regenerating the layer tree. for: \(self.contentView.bounds) \(ignoreLayout)")
+                print("Regenerating the layer tree for: \(self.contentView.bounds) \(ignoreLayout)")
                 removeAllLayers()
-//                addLeadingRuleIfNeeded(rootRule, view: self)
-//                addFooterRuleIfNeeded(footerRule)
-//                rulebottomAnchor?.isActive = true
+                //                addLeadingRuleIfNeeded(rootRule, view: self)
+                //                addFooterRuleIfNeeded(footerRule)
+                //                rulebottomAnchor?.isActive = true
                 
                 if contentView.superview != nil {
                     ruleManager.configureRules(using: contentView)
                 }
- 
+                
                 if let render = self.renderSource,
-                    let dataSource = dataSource, render.numberOfRenders > 0  {
+                   let dataSource = dataSource, render.numberOfRenders > 0  {
                     // layout renders
                     layoutRenders(render.numberOfRenders, dataSource)
                     // layout rules
@@ -1315,16 +869,145 @@ public class OMScrollableChart: UIScrollView, UIScrollViewDelegate, ChartProtoco
             }
         }
     }
-    var oldFrame: CGRect = .zero
 }
 
+// MARK: - overrides
 extension OMScrollableChart {
     public override func didMoveToSuperview() {
         super.didMoveToSuperview()
         setupView()
         self.clearsContextBeforeDrawing = true
     }
-    private func onTouchesBegan(_ touches: Set<UITouch>) {
+    public override var contentOffset: CGPoint {
+        get {
+            return super.contentOffset
+        }
+        set(newValue) {
+            if contentOffset != newValue {
+                super.contentOffset = newValue
+            }
+        }
+    }
+    public override var frame: CGRect {
+        set(newValue) {
+            super.frame = newValue
+            self.setNeedsLayout()
+        }
+        get { return super.frame }
+    }
+    
+    public override func draw(_ layer: CALayer, in ctx: CGContext) {
+        super.draw(layer, in: ctx)
+        updateRendersOpacity()
+    }
+    
+    func forceLayoutReload() {
+        self.updateLayout(ignoreLayout: true)
+    }
+    private func layoutForFrame() {
+        if self.updateDataSourceData() {
+            self.forceLayoutReload()
+        } else {
+            //GCLog.print("layout is 1")
+        }
+    }
+    private func updateRendersOpacity() {
+        // Create the points from the discrete data using the renders
+        //print("[\(Date().description)] [RND] updating render layer opacity [PKJI]")
+        if allDataPointsRender.isEmpty == false {
+            if let render = self.renderSource,
+               let dataSource = dataSource, render.numberOfRenders > 0  {
+                for renderIndex in 0..<render.numberOfRenders {
+                    let opacity = dataSource.layerOpacity(chart: self, renderIndex: renderIndex)
+                    // layout renders opacity
+                    updateRenderLayersOpacity(for: renderIndex, layerOpacity: opacity)
+                }
+            }
+        }
+        //print("[\(Date().description)] [RND] visibles \(visibleLayers.count) no visibles \(invisibleLayers.count) [PKJI]")
+    }
+    
+    private func animatePointsClearOpacity( duration: TimeInterval = 4.0) {
+        guard renderLayers.flatMap({$0}).isEmpty == false else {
+            return
+        }
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(duration)
+        for layer in renderLayers[Renders.points.rawValue] {
+            let anim = animationOpacity(layer,
+                                        fromValue: CGFloat(layer.opacity),
+                                        toValue: 0.0)
+            layer.add(anim,
+                      forKey: ScrollChartConfiguration.animationPointsClearOpacityKey)
+        }
+        CATransaction.commit()
+    }
+    
+    public override func layoutSubviews() {
+        self.backgroundColor = .clear
+        super.layoutSubviews()
+        if oldFrame != self.frame {
+            self.oldFrame = self.frame
+            flowDelegate?.frameChanged(frame: frame)
+            layoutForFrame()
+        } else {
+            updateRendersOpacity()
+        }
+    }
+    public override func draw(_ rect: CGRect) {
+        super.draw(rect)
+        if let ctx = UIGraphicsGetCurrentContext() {
+            if drawPolylineGradient {
+                strokeGradient(ctx: ctx,
+                               layer: polylineLayer,
+                               points: polylinePoints,
+                               color: lineColor,
+                               lineWidth: lineWidth,
+                               fadeFactor: polylineGradientFadePercentage)
+            } else {
+                ctx.saveGState()
+                // Clip to the path
+                if let path = polylineLayer.path {
+                    let pathToFill = UIBezierPath(cgPath: path)
+                    self.lineColor.setFill()
+                    pathToFill.fill()
+                }
+                ctx.restoreGState()
+            }
+        }
+        // drawVerticalGridLines()
+        // drawHorizalGridLines()
+        // Specify a border (stroke) color.
+        // UIColor.black.setStroke()
+        // pathVertical.stroke()
+        // pathHorizontal.stroke()
+    }
+    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        onTouchesBegan(touches)
+    }
+    public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?){
+        super.touchesMoved(touches, with: event)
+        onTouchesMoved(touches)
+    }
+    public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesEnded(touches , with: event)
+        onTouchesEnded(touches)
+    }
+}
+
+// MARK: - OMScrollableChartTouches
+extension OMScrollableChart: OMScrollableChartTouches {
+    func onTouchesMoved(_ touches: Set<UITouch>) {
+        let location: CGPoint = locationFromTouchInContentView(touches)
+        //updateLineSelectionLayer(location)
+        tooltip.moveTooltip(location)
+    }
+    func onTouchesEnded(_ touches: Set<UITouch>) {
+        let location: CGPoint = locationFromTouchInContentView(touches)
+        tooltip.hideTooltip(location)
+    }
+    func onTouchesBegan(_ touches: Set<UITouch>) {
         let location: CGPoint = locationFromTouchInContentView(touches)
         //updateLineSelectionLayer(location)
         let hitTestLayer: CALayer? = hitTestAsLayer(location) as? CAShapeLayer
@@ -1364,127 +1047,8 @@ extension OMScrollableChart {
             }
         }
     }
-    
-    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesBegan(touches, with: event)
-        onTouchesBegan(touches)
-    }
-    fileprivate func onTouchesMoved(_ touches: Set<UITouch>) {
-        let location: CGPoint = locationFromTouchInContentView(touches)
-        //updateLineSelectionLayer(location)
-        tooltip.moveTooltip(location)
-    }
-    public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?){
-        super.touchesMoved(touches, with: event)
-        onTouchesMoved(touches)
-    }
-    fileprivate func onTouchesEnded(_ touches: Set<UITouch>) {
-        let location: CGPoint = locationFromTouchInContentView(touches)
-        tooltip.hideTooltip(location)
-    }
-    public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesEnded(touches , with: event)
-        onTouchesEnded(touches)
-    }
-    public override var contentOffset: CGPoint {
-        get {
-            return super.contentOffset
-        }
-        set(newValue) {
-            if contentOffset != newValue {
-                super.contentOffset = newValue
-            }
-        }
-    }
-    public override var frame: CGRect {
-        set(newValue) {
-            super.frame = newValue
-            oldFrame = newValue
-            self.setNeedsLayout()
-        }
-        get { return super.frame }
-    }
-    
-    func forceLayoutReload() {
-        self.updateLayout(ignoreLayout: true)
-    }
-    private func layoutForFrame() {
-        if self.updateDataSourceData() {
-            self.forceLayoutReload()
-        } else {
-            //GCLog.print("layout is 1")
-        }
-    }
-    private func updateRendersOpacity() {
-        // Create the points from the discrete data using the renders
-        //print("[\(Date().description)] [RND] updating render layer opacity [PKJI]")
-        if allDataPointsRender.isEmpty == false {
-            if let render = self.renderSource,
-                let dataSource = dataSource, render.numberOfRenders > 0  {
-                for renderIndex in 0..<render.numberOfRenders {
-                    let opacity = dataSource.layerOpacity(chart: self, renderIndex: renderIndex)
-                    // layout renders opacity
-                    updateRenderLayersOpacity(for: renderIndex, layerOpacity: opacity)
-                }
-            }
-        }
-        //print("[\(Date().description)] [RND] visibles \(visibleLayers.count) no visibles \(invisibleLayers.count) [PKJI]")
-    }
-
-    private func animatePointsClearOpacity( duration: TimeInterval = 4.0) {
-        guard renderLayers.flatMap({$0}).isEmpty == false else {
-            return
-        }
-        CATransaction.begin()
-        CATransaction.setAnimationDuration(duration)
-        for layer in renderLayers[Renders.points.rawValue] {
-            let anim = animationOpacity(layer,
-                                        fromValue: CGFloat(layer.opacity),
-                                        toValue: 0.0)
-            layer.add(anim,
-                      forKey: ScrollChartConfiguration.animationPointsClearOpacityKey)
-        }
-        CATransaction.commit()
-    }
-
-    public override func layoutSubviews() {
-        self.backgroundColor = .clear
-        super.layoutSubviews()
-        if oldFrame != self.frame {
-            flowDelegate?.frameChanged(frame: frame)
-            layoutForFrame()
-        } else {
-            updateRendersOpacity()
-        }
-    }
-    public override func draw(_ rect: CGRect) {
-        super.draw(rect)
-        if let ctx = UIGraphicsGetCurrentContext() {
-            if drawPolylineGradient {
-                strokeGradient(ctx: ctx,
-                               layer: polylineLayer,
-                               points: polylinePoints,
-                               color: lineColor,
-                               lineWidth: lineWidth,
-                               fadeFactor: polylineGradientFadePercentage)
-            } else {
-                ctx.saveGState()
-                // Clip to the path
-                if let path = polylineLayer.path {
-                    let pathToFill = UIBezierPath(cgPath: path)
-                    self.lineColor.setFill()
-                    pathToFill.fill()
-                }
-                ctx.restoreGState()
-            }
-        }
-        // drawVerticalGridLines()
-        // drawHorizalGridLines()
-        // Specify a border (stroke) color.
-        // UIColor.black.setStroke()
-        // pathVertical.stroke()
-        // pathHorizontal.stroke()
-    }
+}
+extension OMScrollableChart: UIScrollViewDelegate {
     // MARK: Scroll Delegate
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
         if isTracking {
@@ -1497,8 +1061,8 @@ extension OMScrollableChart {
     //    The decelerating property of UIScrollView controls deceleration.
     //
     public func scrollViewWillEndDragging(_ scrollView: UIScrollView,
-                                   withVelocity velocity: CGPoint,
-                                   targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+                                          withVelocity velocity: CGPoint,
+                                          targetContentOffset: UnsafeMutablePointer<CGPoint>) {
         
     }
     //    scrollViewWillBeginDecelerating - The scroll view calls
@@ -1525,39 +1089,25 @@ extension OMScrollableChart {
         //GCLog.print("Scrolling \(String(describing: scrollView.classForCoder)) was Finished", .trace)
     }
 }
+
 // Regression
 extension OMScrollableChart {
     
     func makeLinregressPoints(data: ChartData, size: CGSize, numberOfElements: Int, renderIndex: Int) -> ChartData {
         let originalDataIndex: [Float] = data.points.enumerated().map { Float($0.offset) }
-        //        let max = originalData.points.max(by: { $0.x < $1.x})!
-        //        let distance = mean(originalDataX.enumerated().compactMap{
-        //            if $0.offset > 0 {
-        //                return originalDataX[$0.offset-1].distance(to: $0.element)
-        //            }
-        //            return nil
-        //        })
-        
-        
-        // let results = originalDataX//.enumerated().map{ return originalDataX.prefix($0.offset+1).reduce(.zero, +)}
-        
-        linFunction = Stadistics.linregress(originalDataIndex, data.data)
-        
-        // var index = 0
-        let result: [Float] = [Float].init(repeating: 0, count: numberOfElements)
-        
-        let resulLinregress = result.enumerated().map{ linregressDataForIndex(index: Float($0.offset))}
-        //        for item in result  {
-        //            result[index] = dataForIndex(index:  Float(index))
-        //            index += 1
-        //        }
-        //
+        // Create the regression function for current data
+        self.linFunction = Stadistics.linregress(originalDataIndex, data.data)
+        var resulLinregress: [Float] = [Float].init(repeating: 0, count: numberOfElements)
+        for index in 0...numberOfElements - 1 {
+            resulLinregress[index] = linregressDataForIndex(index: Float(originalDataIndex.count + index))
+        }
         // add the new points
         let newData = data.data + resulLinregress
         let generator  = scaledPointsGenerator[renderIndex]
         let newPoints =  generator.makePoints(data: newData, size: size)
         return (newPoints, newData)
     }
+    
     func linregressDataForIndex(index: Float) -> Float {
         guard let linFunction = linFunction else { return 0 }
         return linFunction.slope * index + linFunction.intercept

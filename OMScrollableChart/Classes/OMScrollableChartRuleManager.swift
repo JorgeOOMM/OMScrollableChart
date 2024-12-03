@@ -14,7 +14,7 @@
 
 import UIKit
 
-public struct RuleManager {
+public struct OMScrollableChartRuleManager {
     var chart: OMScrollableChart
     init(chart: OMScrollableChart) {
         self.chart = chart

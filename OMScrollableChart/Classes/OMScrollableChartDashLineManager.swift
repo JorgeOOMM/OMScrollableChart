@@ -14,7 +14,7 @@
 
 import UIKit
 
-public class DashLineManager {
+public class OMScrollableChartDashLineManager {
     
     func removeVerticalLineLayers() {
         dashVerticalLineLayers.forEach({$0.removeFromSuperlayer()})

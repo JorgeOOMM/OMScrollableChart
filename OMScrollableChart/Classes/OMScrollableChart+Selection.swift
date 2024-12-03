@@ -157,8 +157,15 @@ extension OMScrollableChart {
                 tooltip.string = "\(dataSection) \(tooltipText)"
                 tooltip.displayTooltip(tooltipPosition, duration: duration)
             } else {
-                                                                    // then calculate manually
-                let amount = Double(renderDataPoints[renderIndex][dataIndex])
+                var amount: Double = 0
+                if renderDataPoints[renderIndex].count <= dataIndex {
+                    if let data = self.linregressData[renderIndex]?.data {
+                        amount = Double(data[dataIndex])
+                    }
+                } else {
+                    amount = Double(renderDataPoints[renderIndex][dataIndex])
+                }
+                // then calculate manually
                 if let dataString = currencyFormatter.string(from: NSNumber(value: amount)) {
                     tooltip.string = "\(dataSection) \(dataString)"
                 } else if let string = dataStringFromPoint(layerPoint.position, renderIndex: renderIndex) {
