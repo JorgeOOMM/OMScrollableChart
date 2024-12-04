@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import UIKit
+import GUILib
 
 /*
  La idea es que el usuario facilmente pueda crear representacion
@@ -24,7 +25,8 @@ import UIKit
  
  Yo proporcionno los 6 primeros. Llamados: 'legacy renders´
  
- polyline:  Mantiene una linea uniendo todos los puntos de información de la representación de los datos, la            linea por defecto está interpolada usando 'Catmull-Rom splines`, aunque es completamente
+ polyline:  Mantiene una linea uniendo todos los puntos de información de la representación de los datos, la            
+ linea por defecto está interpolada usando 'Catmull-Rom splines`, aunque es completamente
  configurable.
  puntos  :  Representa cada punto de información de la representación de los datos.
  punto seleccionado
@@ -124,13 +126,13 @@ extension OMScrollableChart {
         
         return [polylineLayer]
     }
-    func makeSimplified(_ data: [Float], _ renderIndex: Int, _ boundsSize: CGSize, _ dataSource: OMScrollableChartDataSource) {
-        let discretePoints = makeRawPoints(data, size: boundsSize)
+    func makeSimplified(_ data: [Float], _ renderIndex: Int, _ boundsSize: CGSize, _ dataSource: DataSourceProtocol) {
+        let discretePoints = rawPoints(data, size: boundsSize)
         
         if discretePoints.count > 0 {
             let chartData = (discretePoints, data)
-            if let approximationPoints =  makeSimplifiedPoints( points: discretePoints,
-                                                                tolerance: approximationTolerance) {
+            if let approximationPoints =  simplifiedPoints( points: discretePoints,
+                                                                tolerance: simplifiedTolerance) {
                 if approximationPoints.count > 0 {
                     self.approximationData.insert(chartData, at: renderIndex)
                     self.pointsRender.insert(approximationPoints, at: renderIndex)
@@ -149,10 +151,10 @@ extension OMScrollableChart {
         }
     }
     
-    func makeAverage(_ data: [Float], _ renderIndex: Int,_ boundsSize: CGSize, _ dataSource: OMScrollableChartDataSource) {
-        if let points = makeAveragedPoints(data: data,
+    func makeAverage(_ data: [Float], _ renderIndex: Int,_ boundsSize: CGSize, _ dataSource: DataSourceProtocol) {
+        if let points = averagedPoints(data: data,
                                            size: boundsSize,
-                                           elementsToAverage: numberOfElementsToAverage) {
+                                           elementsToAverage: self.numberOfElementsToAverage) {
             let chartData = (points, data)
             self.averagedData.insert(chartData, at: renderIndex)
             self.pointsRender.insert(points, at: renderIndex)
@@ -171,9 +173,9 @@ extension OMScrollableChart {
     
     func makeDiscrete(_ data: [Float],
                       _ renderIndex: Int,
-                      _ boundsSize: CGSize, _ dataSource: OMScrollableChartDataSource) {
+                      _ boundsSize: CGSize, _ dataSource: DataSourceProtocol) {
         
-        let points = makeRawPoints(data, size: boundsSize)
+        let points = rawPoints(data, size: boundsSize)
         if points.count > 0 {
             let chartData = (points, data)
             self.discreteData.insert(chartData, at: renderIndex)
@@ -193,17 +195,33 @@ extension OMScrollableChart {
         }
     }
     
+    // Lineal Regression
+    private func linregressPoints(data: ChartData, size: CGSize, numberOfElements: Int, renderIndex: Int) -> ChartData {
+        let originalDataIndex: [Float] = data.points.enumerated().map { Float($0.offset) }
+        // Create the regression function for current data
+        let linFunction: (slope: Float, intercept: Float) = Stadistics.linregress(originalDataIndex, data.data)
+        var resulLinregress: [Float] = [Float].init(repeating: 0, count: numberOfElements)
+        for index in 0...numberOfElements - 1 {
+            resulLinregress[index] = linFunction.slope * Float(originalDataIndex.count + index) + linFunction.intercept
+        }
+        // add the new points
+        let newData = data.data + resulLinregress
+        let generator  = scaledPointsGenerator[renderIndex]
+        let newPoints =  generator.makePoints(data: newData, size: size)
+        return (newPoints, newData)
+    }
+    
     private func makeLinregress(_ data: [Float],
                                 _ renderIndex: Int,
                                 _ boundsSize: CGSize,
-                                _ dataSource: OMScrollableChartDataSource) {
-        let points = makeRawPoints(data, size: boundsSize)
+                                _ dataSource: DataSourceProtocol) {
+        let points = rawPoints(data, size: boundsSize)
         if points.count > 0 {
             let chartData = (points, data)
-            let linregressData = makeLinregressPoints(data: chartData,
-                                                      size: boundsSize,
-                                                      numberOfElements: self.numberOfRegressValues,
-                                                      renderIndex: renderIndex)
+            let linregressData = linregressPoints(data: chartData,
+                                                  size: boundsSize,
+                                                  numberOfElements: self.numberOfRegressValues,
+                                                  renderIndex: renderIndex)
             self.linregressData.insert(linregressData, at: renderIndex)
             self.pointsRender.insert(linregressData.0, at: renderIndex)
             var layers = dataSource.dataLayers(chart: self,
@@ -245,10 +263,16 @@ extension OMScrollableChart {
         }
         let currentRenderData = renderDataPoints[renderIndex]
         switch renderAs {
-        case .simplified: makeSimplified(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
-        case .averaged: makeAverage(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
+        case .simplified(let value):
+            self.simplifiedTolerance = value
+            makeSimplified(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
+        case .averaged(let value):
+            self.numberOfElementsToAverage = value
+            makeAverage(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
         case .discrete: makeDiscrete(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
-        case .linregress: makeLinregress(currentRenderData, renderIndex, regressBondsSize(renderIndex), dataSource)
+        case .linregress(let value):
+            self.numberOfRegressValues = value
+            makeLinregress(currentRenderData, renderIndex, regressBondsSize(renderIndex), dataSource)
         }
         self.renderType.insert(renderAs, at: renderIndex)
     }

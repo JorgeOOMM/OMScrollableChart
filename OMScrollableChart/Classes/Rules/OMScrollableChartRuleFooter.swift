@@ -15,16 +15,16 @@
 import UIKit
 
 // MARK: - OMScrollableChartRuleFooter -
-class OMScrollableChartRuleFooter: UIStackView, ChartRuleProtocol {
+class OMScrollableChartRuleFooter: UIStackView, RuleProtocol {
     var fontStrokeColor: UIColor = .black
     var leftInset: CGFloat = 16
     var chart: OMScrollableChart!
-    var type: ChartRuleType = .footer
+    var type: RuleType = .footer
     var ruleFooterViewSelectedSectionIndex: CGFloat = 0
     /// Border decoration.
     var borderDecorationWidth: CGFloat = 0.5
     var decorationColor: UIColor = UIColor.darkGreyBlueTwo
-    var  borderViews = [UIView]()
+    var borderViews = [UIView]()
     var views: [UIView]? {
         return arrangedSubviews
     }
@@ -92,12 +92,13 @@ class OMScrollableChartRuleFooter: UIStackView, ChartRuleProtocol {
             label.textAlignment = .center
             label.font = font
             label.sizeToFit()
-                label.backgroundColor = .clear
+            label.backgroundColor = .clear
             label.textColor = fontColor
             self.addArrangedSubview(label)
             label.widthAnchor.constraint(equalToConstant: width).isActive = true
                 //label.topAnchor.constraint(equalTo: self.topAnchor).isActive = true
             label.heightAnchor.constraint(equalToConstant: height).isActive = true
+            
             borderViews.append(label.setBorder(border: .right(inset: 5),
                                             weight: borderDecorationWidth,
                                 color: decorationColor.withAlphaComponent(0.24)))
@@ -119,8 +120,8 @@ class OMScrollableChartRuleFooter: UIStackView, ChartRuleProtocol {
             
             let location = touch.preciseLocation(in: self)
             let subviewIndex = subviewIndexFromPoint(location)
-            if subviewIndex != Index.bad.rawValue {
-                _ = onFooterRuleSectionIndexSelected( at: CGFloat(subviewIndex))
+            if subviewIndex != Index.invalid.rawValue {
+                _ = footerRuleSectionIndexSelected( at: CGFloat(subviewIndex))
                 ruleFooterViewSelectedSectionIndex = CGFloat(subviewIndex)
             }
         }

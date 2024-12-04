@@ -16,36 +16,18 @@ import UIKit
 import GUILib
 import Accelerate
 
-protocol OMScrollableChartTouches {
+protocol TouchesProtocol {
     func onTouchesBegan(_ touches: Set<UITouch>)
     func onTouchesMoved(_ touches: Set<UITouch>)
     func onTouchesEnded(_ touches: Set<UITouch>)
 }
 
-extension OMScrollableChart {
-    public enum RenderType: Equatable{
-        case discrete
-        case averaged(Int)
-        case simplified(CGFloat)
-        case linregress(Int)
-        var  isAveraged: Bool {
-            switch self {
-            case .averaged(_): return true
-            default: return false
-            }
-        }
-    }
-    // MARK: Default renders
-    enum Renders: Int {
-        case points
-        case polyline
-        case segments
-        case selectedPoint
-        case currentPoint
-        case bar1
-        case bar2
-        case base          //  public renders base index
-    }
+protocol RenderLocationProtocol {
+    func indexForPoint(_ point: CGPoint, renderIndex: Int) -> Int?
+    func dataStringFromPoint(_ point: CGPoint, renderIndex: Int) -> String?
+    func dataFromPoint(_ point: CGPoint, renderIndex: Int) -> Float?
+    func dataIndexFromPoint(_ point: CGPoint, renderIndex: Int) -> Int?
+    func dataIndexFromLayers(_ point: CGPoint, renderIndex: Int) -> Int?
 }
 
 protocol ChartProtocol {
@@ -54,6 +36,32 @@ protocol ChartProtocol {
     func updateDataSourceData() -> Bool
 }
 
+public enum RenderType: Equatable{
+    case discrete
+    case averaged(Int)
+    case simplified(CGFloat)
+    case linregress(Int)
+    var  isAveraged: Bool {
+        switch self {
+        case .averaged(_): return true
+        default: return false
+        }
+    }
+}
+// MARK: Default renders
+enum Renders: Int {
+    case points
+    case polyline
+    case segments
+    case selectedPoint
+    case currentPoint
+    case bar1
+    case bar2
+    case base          //  public renders base index
+}
+
+
+
 public enum AnimationTiming: Hashable {
     case none
     case repeatn(Int)
@@ -61,13 +69,13 @@ public enum AnimationTiming: Hashable {
     case oneShot
 }
 
-protocol OMScrollableChartDataSource: AnyObject {
+protocol DataSourceProtocol: AnyObject {
     func dataPoints(chart: OMScrollableChart, renderIndex: Int, section: Int) -> [Float]
     func numberOfPages(chart: OMScrollableChart) -> CGFloat
     func dataLayers(chart: OMScrollableChart, renderIndex: Int, section: Int, points: [CGPoint]) -> [OMGradientShapeClipLayer]
     func footerSectionsText(chart: OMScrollableChart) -> [String]?
     func dataPointTootipText(chart: OMScrollableChart, renderIndex: Int, dataIndex: Int, section: Int) -> String?
-    func dataOfRender(chart: OMScrollableChart, renderIndex: Int) -> OMScrollableChart.RenderType
+    func dataOfRender(chart: OMScrollableChart, renderIndex: Int) -> RenderType
     func dataSectionForIndex(chart: OMScrollableChart, dataIndex: Int, section: Int) -> String?
     func numberOfSectionsPerPage(chart: OMScrollableChart) -> Int
     func layerOpacity(chart: OMScrollableChart, renderIndex: Int) -> CGFloat
@@ -76,14 +84,15 @@ protocol OMScrollableChartDataSource: AnyObject {
     
     
 }
-protocol OMScrollableChartRenderableDelegateProtocol: AnyObject {
+protocol RenderableDelegateProtocol: AnyObject {
     func animationDidEnded(chart: OMScrollableChart,  renderIndex: Int, animation: CAAnimation)
     func didSelectDataIndex(chart: OMScrollableChart, renderIndex: Int, dataIndex: Int, layer: CALayer)
 }
-protocol OMScrollableChartRenderableProtocol: AnyObject {
+protocol RenderableProtocol: AnyObject {
     var numberOfRenders: Int {get}
 }
-extension OMScrollableChartRenderableProtocol {
+
+extension RenderableProtocol {
     // Default renders, polyline and points
     var numberOfRenders: Int {
         return 2

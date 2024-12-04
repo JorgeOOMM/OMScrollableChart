@@ -21,7 +21,7 @@ public struct OMScrollableChartRuleManager {
     }
     
     public var rulesMarks = [Float]()
-    func addToVerticalRuleMarks(leadingRule: ChartRuleProtocol) {
+    func addToVerticalRuleMarks(leadingRule: RuleProtocol) {
         chart.dashlines.removeVerticalLineLayers()
         let leadingRuleWidth: CGFloat = leadingRule.ruleSize.width
         let width: CGFloat = chart.contentView.frame.width
@@ -43,10 +43,10 @@ public struct OMScrollableChartRuleManager {
         }
     }
 
-    var rootRule: ChartRuleProtocol?
-    var footerRule: ChartRuleProtocol?
-    var topRule: ChartRuleProtocol?
-    var rules = [ChartRuleProtocol]()
+    var rootRule: RuleProtocol?
+    var footerRule: RuleProtocol?
+    var topRule: RuleProtocol?
+    var rules = [RuleProtocol]()
     var ruleLeadingAnchor: NSLayoutConstraint?
     var ruletopAnchor: NSLayoutConstraint?
     var rulebottomAnchor: NSLayoutConstraint?
@@ -91,7 +91,7 @@ public struct OMScrollableChartRuleManager {
     /// - Parameters:
     ///   - rule: ChartRuleProtocol
     ///   -mutating  view: UIView
-    mutating func addLeadingRuleIfNeeded(_ rule: ChartRuleProtocol?,
+    mutating func addLeadingRuleIfNeeded(_ rule: RuleProtocol?,
                                          contentView: UIView,
                                          view: UIView? = nil) {
         guard let rule = rule else {
@@ -135,7 +135,7 @@ public struct OMScrollableChartRuleManager {
     /// - Parameters:
     ///   - rule: ruleFooter description
     ///   - view: UIView
-    func addFooterRuleIfNeeded(_ rule: ChartRuleProtocol? = nil,
+    func addFooterRuleIfNeeded(_ rule: RuleProtocol? = nil,
                                contentView: UIView,
                                view: UIView? = nil)
     {

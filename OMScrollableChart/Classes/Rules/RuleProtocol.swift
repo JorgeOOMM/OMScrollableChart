@@ -17,7 +17,7 @@
 import UIKit
 
 
-public protocol OMScrollableChartRuleDelegate {
+public protocol RuleDelegateProtocol {
     func footerSectionsTextChanged(texts: [String])
     func footerSectionDidTouchUpInside(section: CGFloat, selectedView: UIView?)
     func footerSectionDidTouchUpInsideMove(section: CGFloat, selectedView: UIView?, location: CGPoint)
@@ -27,7 +27,7 @@ public protocol OMScrollableChartRuleDelegate {
     func frameChanged(frame: CGRect)
     func dataPointsChanged(dataPoints: [Float], for index: Int)
     func drawRootRuleText(in frame: CGRect, text: NSAttributedString)
-    func renderDataTypeChanged(in dataOfRender: OMScrollableChart.RenderType, for index: Int)
+    func renderDataTypeChanged(in dataOfRender: RenderType, for index: Int)
     func updateRenderLayers( index: Int, with layers: [CALayer])
     func updateRenderData(index: Int, data: Data?)
     func deviceRotation()
@@ -35,17 +35,17 @@ public protocol OMScrollableChartRuleDelegate {
     
 }
 
-enum ChartRuleType: Int {
+enum RuleType: Int {
     case leading = 0
     case footer = 1
     case top = 2
     case trailing = 3
 }
 
-protocol ChartRuleProtocol: UIView {
+protocol RuleProtocol: UIView {
     var chart: OMScrollableChart! {get set}
     init(chart: OMScrollableChart!)
-    var type: ChartRuleType {get set}
+    var type: RuleType {get set}
     
     var font: UIFont {get set}
     var fontColor: UIColor {get set}
@@ -55,6 +55,6 @@ protocol ChartRuleProtocol: UIView {
     var ruleSize: CGSize {get}
     var views: [UIView]? {get}
     func layoutRule() -> Bool
-    func onFooterRuleSectionIndexSelected(at index: CGFloat?) -> Bool
+    func footerRuleSectionIndexSelected(at index: CGFloat?) -> Bool
     func subviewIndexFromPoint(_ location: CGPoint) -> Int
 }

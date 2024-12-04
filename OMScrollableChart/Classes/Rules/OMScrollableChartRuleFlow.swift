@@ -17,7 +17,7 @@
 import UIKit
 
 
-public class OMScrollableChartRuleFlow: OMScrollableChartRuleDelegate {
+public class OMScrollableChartRuleFlow: RuleDelegateProtocol {
     public func footerSectionDidTouchUpInsideMove(section: CGFloat, selectedView: UIView?, location: CGPoint) {
         print("[FLOW] footerSectionDidTouchUpInsideMove", section)
     }
@@ -35,25 +35,21 @@ public class OMScrollableChartRuleFlow: OMScrollableChartRuleDelegate {
     }
     
     public func updateRenderLayers(index: Int, with layers: [CALayer]) {
-        print("[FLOW] updateRenderLayers", OMScrollableChart.Renders(rawValue: index)!, layers.count)
+        print("[FLOW] updateRenderLayers", Renders(rawValue: index)!, layers.count)
     }
-    
     public func updateRenderData(index: Int, data: Data?) {
-        print("[FLOW] updateRenderData", OMScrollableChart.Renders(rawValue: index)!, data)
+        print("[FLOW] updateRenderData", Renders(rawValue: index)!, data ?? "")
     }
     
-    public func renderDataTypeChanged(in dataOfRender: OMScrollableChart.RenderType, for index: Int) {
-        print("[FLOW] renderDataTypeChanged", dataOfRender, OMScrollableChart.Renders(rawValue: index)!)
+    public func renderDataTypeChanged(in dataOfRender: RenderType, for index: Int) {
+        print("[FLOW] renderDataTypeChanged", dataOfRender, Renders(rawValue: index)!)
     }
     public func regeneratingRendersLayers() {
         print("[FLOW] regeneratingRendersLayers")
     }
-    
-    
     public func drawRootRuleText(in frame: CGRect, text: NSAttributedString) {
         print("[FLOW] drawRootRuleText", frame)
     }
-    
     public func footerSectionsTextChanged(texts: [String]) {
         print("[FLOW] footerSectionsTextChanged", texts)
     }
@@ -71,6 +67,6 @@ public class OMScrollableChartRuleFlow: OMScrollableChartRuleDelegate {
     }
     
     public func dataPointsChanged(dataPoints: [Float], for index: Int) {
-        print("[FLOW] dataPointsChanged", OMScrollableChart.Renders(rawValue: index)!)
+        print("[FLOW] dataPointsChanged", Renders(rawValue: index)!)
     }
 }

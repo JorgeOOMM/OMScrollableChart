@@ -84,13 +84,13 @@ extension OMScrollableChart {
     }
     /// didSelectedRenderLayerIndex
     /// - Parameters:
-    ///   - layer: layer 
+    ///   - layer: layer
     ///   - renderIndex: Int
     ///   - dataIndex: Int
     func didSelectedRenderLayerIndex(layer: CALayer, renderIndex: Int, dataIndex: Int) {
         // lets animate the footer rule
         if let footer = footerRule as? OMScrollableChartRuleFooter,
-            let views = footer.views {
+           let views = footer.views {
             if dataIndex < views.count {
                 views[dataIndex].shakeGrow(duration: 1.0)
             } else {
@@ -98,9 +98,9 @@ extension OMScrollableChart {
             }
         }
         renderDelegate?.didSelectDataIndex(chart: self,
-                                        renderIndex: renderIndex,
-                                        dataIndex: dataIndex,
-                                        layer: layer)
+                                           renderIndex: renderIndex,
+                                           dataIndex: dataIndex,
+                                           layer: layer)
     }
     /// selectRenderLayerWithAnimation
     /// - Parameters:
@@ -117,14 +117,14 @@ extension OMScrollableChart {
         CATransaction.lock()
         CATransaction.setAnimationDuration(duration)
         CATransaction.begin()
-
+        
         
         // selectRenderLayer(layerPoint, renderIndex: renderIndex)
         
         if animatePointLayers {
             self.animateOnRenderLayerSelection(layerPoint,
-                                          renderIndex: renderIndex,
-                                          duration: duration)
+                                               renderIndex: renderIndex,
+                                               duration: duration)
         }
         var tooltipPosition = CGPoint.zero
         var tooltipPositionFix = CGPoint.zero
@@ -152,7 +152,7 @@ extension OMScrollableChart {
                                                               section: 0) ?? ""
             tooltipPosition = CGPoint(x: layerPoint.position.x,
                                       y: selectedPoint.y)
-        
+            
             if let tooltipText = tooltipText {                      // the dataSource was priority
                 tooltip.string = "\(dataSection) \(tooltipText)"
                 tooltip.displayTooltip(tooltipPosition, duration: duration)
@@ -193,6 +193,10 @@ extension OMScrollableChart {
         }
         return .zero
     }
+}
+
+extension OMScrollableChart: RenderLocationProtocol {
+    
     /// indexForPoint
     /// - Parameters:
     ///   - point: CGPoint

@@ -17,7 +17,7 @@
 import UIKit
 
 public enum Index: Int {
-    case bad = -1
+    case invalid = -1
 }
 
 // Uncategorized functions.
@@ -30,10 +30,10 @@ public func NSLocalizedString(_ key: String,
 }
 
 
-extension ChartRuleProtocol {
-    /// onFooterRuleSectionIndexSelected
+extension RuleProtocol {
+    /// footerRuleSectionIndexSelected
     /// - Parameter location: CGPoint
-    func onFooterRuleSectionIndexSelected(at index: CGFloat? = nil ) -> Bool {
+    func footerRuleSectionIndexSelected(at index: CGFloat? = nil ) -> Bool {
         guard let ruleViews = self.views else { return false }
         if let sectionSelectedIndex = index {
             let idx = Int(sectionSelectedIndex)
@@ -65,7 +65,7 @@ extension ChartRuleProtocol {
     }
     func subviewIndexFromPoint(_ location: CGPoint) -> Int {
         guard let views = views else {
-            return Index.bad.rawValue
+            return Index.invalid.rawValue
         }
         for (index, view) in views.enumerated() {
             if view.frame.contains(location) {
@@ -74,19 +74,19 @@ extension ChartRuleProtocol {
                 return index
             }
         }
-        return Index.bad.rawValue
+        return Index.invalid.rawValue
     }
 }
 
 //
 // MARK: - OMScrollableLeadingChartRule -
 //
-class OMScrollableLeadingChartRule: UIView, ChartRuleProtocol {
+class OMScrollableLeadingChartRule: UIView, RuleProtocol {
     private var labelViews = [UIView]()
     var views: [UIView]?  {
         return labelViews
     }
-    var type: ChartRuleType = .leading
+    var type: RuleType = .leading
     var chart: OMScrollableChart!
     var decorationColor: UIColor = .black
 
