@@ -148,17 +148,15 @@ class OMScrollableChartRuleFooter: UIStackView, RuleProtocol {
         ruleFooterViewSelectedSectionIndex = 0
     }
     
-    override func didMoveToSuperview() {
-        super.didMoveToSuperview()
-        if !layoutRule() { // TODO: update layout
-           // Log.print("Unable to create the rule layout", .error)
-        }
-    }
     override func layoutSubviews() {
         super.layoutSubviews()
 //        backgroundColor = .surfaceDark
          if !layoutRule() { // TODO: update layout
             //Log.print("Unable to create the rule layout" ,.error)
         }
+    }
+    override func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        setNeedsLayout()
     }
 }

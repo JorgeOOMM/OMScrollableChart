@@ -50,17 +50,17 @@ public enum RenderType: Equatable{
 }
 // MARK: Default renders
 enum Renders: Int {
-    case points
     case polyline
+    case points
     case segments
     case selectedPoint
     case currentPoint
     case bar1
     case bar2
-    case base          //  public renders base index
 }
 
-
+//  public renders base index
+let RendersBase = Renders.bar2.rawValue + 1
 
 public enum AnimationTiming: Hashable {
     case none
@@ -72,21 +72,19 @@ public enum AnimationTiming: Hashable {
 protocol DataSourceProtocol: AnyObject {
     func dataPoints(chart: OMScrollableChart, renderIndex: Int, section: Int) -> [Float]
     func numberOfPages(chart: OMScrollableChart) -> CGFloat
-    func dataLayers(chart: OMScrollableChart, renderIndex: Int, section: Int, points: [CGPoint]) -> [OMGradientShapeClipLayer]
     func footerSectionsText(chart: OMScrollableChart) -> [String]?
     func dataPointTootipText(chart: OMScrollableChart, renderIndex: Int, dataIndex: Int, section: Int) -> String?
     func dataOfRender(chart: OMScrollableChart, renderIndex: Int) -> RenderType
     func dataSectionForIndex(chart: OMScrollableChart, dataIndex: Int, section: Int) -> String?
     func numberOfSectionsPerPage(chart: OMScrollableChart) -> Int
-    func layerOpacity(chart: OMScrollableChart, renderIndex: Int) -> CGFloat
-    func queryAnimation(chart: OMScrollableChart, renderIndex: Int) -> AnimationTiming
-    func animateLayers(chart: OMScrollableChart, renderIndex: Int, layerIndex: Int ,layer: OMGradientShapeClipLayer) -> CAAnimation?
-    
-    
 }
 protocol RenderableDelegateProtocol: AnyObject {
+    func layerOpacity(chart: OMScrollableChart, renderIndex: Int) -> CGFloat
+    func queryAnimation(chart: OMScrollableChart, renderIndex: Int) -> AnimationTiming
     func animationDidEnded(chart: OMScrollableChart,  renderIndex: Int, animation: CAAnimation)
     func didSelectDataIndex(chart: OMScrollableChart, renderIndex: Int, dataIndex: Int, layer: CALayer)
+    func dataLayers(chart: OMScrollableChart, renderIndex: Int, section: Int, points: [CGPoint]) -> [OMGradientShapeClipLayer]
+    func animateLayers(chart: OMScrollableChart, renderIndex: Int, layerIndex: Int ,layer: OMGradientShapeClipLayer) -> CAAnimation?
 }
 protocol RenderableProtocol: AnyObject {
     var numberOfRenders: Int {get}

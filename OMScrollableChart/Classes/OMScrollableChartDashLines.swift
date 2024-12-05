@@ -11,22 +11,34 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+//
 import UIKit
-
-public class OMScrollableChartDashLineManager {
-    
+// MARK: - OMScrollableChartDashLines
+public class OMScrollableChartDashLines {
+    var dashVerticalLineLayers = [CAShapeLayer]()
+    var contentView: UIView!
+    init(contentView: UIView!) {
+        self.contentView = contentView
+    }
     func removeVerticalLineLayers() {
         dashVerticalLineLayers.forEach({$0.removeFromSuperlayer()})
         dashVerticalLineLayers.removeAll()
     }
-    
-    var dashVerticalLineLayers = [CAShapeLayer]()
-    var contentView: UIView
-    init(contentView: UIView) {
-        self.contentView = contentView
+    var dashPattern: [CGFloat] = [1, 2] {
+        didSet {
+            dashVerticalLineLayers.forEach { ($0).lineDashPattern = dashPattern.map { NSNumber(value: Float($0)) }}
+        }
     }
-    
+    var dashLineWidth: CGFloat = 0.80 {
+        didSet {
+            dashVerticalLineLayers.forEach { $0.lineWidth = dashLineWidth }
+        }
+    }
+    var dashLineColor = UIColor.black.withAlphaComponent(0.8).cgColor {
+        didSet {
+            dashVerticalLineLayers.forEach { $0.strokeColor = dashLineColor }
+        }
+    }
     /// addDashLineLayer
     ///
     /// - Parameters:
@@ -35,13 +47,11 @@ public class OMScrollableChartDashLineManager {
     ///   - stroke: UIColor
     ///   - lineWidth: CGFloat
     ///   - pattern: [NSNumber]?
-    
     func lineForRuleMark(point: CGPoint,
                                       endPoint: CGPoint,
                                       stroke: UIColor? = nil,
                                       lineWidth: CGFloat? = nil,
-                                      pattern: [NSNumber]? = nil)
-    {
+                                      pattern: [NSNumber]? = nil) {
         let lineLayer = CAShapeLayer()
         lineLayer.strokeColor = stroke?.cgColor ?? dashLineColor
         lineLayer.lineWidth = lineWidth ?? dashLineWidth
@@ -53,25 +63,4 @@ public class OMScrollableChartDashLineManager {
         dashVerticalLineLayers.append(lineLayer)
         contentView.layer.addSublayer(lineLayer)
     }
-    
-    var dashPattern: [CGFloat] = [1, 2] {
-        didSet {
-            dashVerticalLineLayers.forEach { ($0).lineDashPattern = dashPattern.map { NSNumber(value: Float($0)) }}
-        }
-    }
-    
-    var dashLineWidth: CGFloat = 0.80 {
-        didSet {
-            dashVerticalLineLayers.forEach { $0.lineWidth = dashLineWidth }
-        }
-    }
-    
-    var dashLineColor = UIColor.black.withAlphaComponent(0.8).cgColor {
-        didSet {
-            dashVerticalLineLayers.forEach { $0.strokeColor = dashLineColor }
-        }
-    }
 }
-
-
-

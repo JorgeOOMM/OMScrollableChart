@@ -34,63 +34,91 @@ import GUILib
  segmento de seccion
  */
 
+extension UIColor {
+    var colorMap: [UIColor] {
+        return [self.darkerColor(percent: 0.0),
+                self.darkerColor(percent: 0.1),
+                self.darkerColor(percent: 0.2),
+                self.darkerColor(percent: 0.3),
+                self.darkerColor(percent: 0.4),
+                self.lighterColor(percent: 0.4),
+                self.lighterColor(percent: 0.3),
+                self.lighterColor(percent: 0.2),
+                self.lighterColor(percent: 0.1),
+                self.lighterColor(percent: 0.0)]
+    }
+}
+
+
+let layersOnTopBaseZPosition: CGFloat = 10000
 
 extension OMScrollableChart {
-    private func renderDefaultLayers(_ renderIndex: Int, points: [CGPoint]) -> [OMGradientShapeClipLayer] {
+    private func renderDefaultLayers(_ renderIndex: Int, points: [CGPoint], data: [Float]? = nil) -> [OMGradientShapeClipLayer] {
         switch Renders(rawValue: renderIndex) {
         case .polyline:
-            let lineWidth: CGFloat = 4
-            let color  = UIColor.greyishBlue
-            let layers = updatePolylineLayer(lineWidth: lineWidth, color: color)
-            layers.forEach({$0.name = "polyline"})
+            let layers = updatePolylineLayer(lineWidth: ScrollChartTheme.polylineLineWidth,
+                                             color: ScrollChartTheme.polylineColor)
+#if DEBUG
+            assert(layers.count == 1, "Polyline must have only one layer")
+            layers.first?.name = "polyline"
+#endif
             return layers
         case .segments:
-            
             guard let subPaths = self.polylinePath?.cgPath.subpaths, subPaths.count > 0 else {
-                print("[RENDER][ERROR] Empty polyline subpaths.")
+                Log.e("Empty polyline subpaths.")
                 return []
             }
-            let strokeSegmentsColor: UIColor = lineColor.withAlphaComponent(0.1)
-            let segmentsFillColor: UIColor   = selectedColor.withAlphaComponent(0.11)
-            
-            let colors: [UIColor] = [UIColor.greyishBlue.adjust(by: 0.7).withAlphaComponent(0.41),
-                                     UIColor.greyishBlue.adjust(by: 0.5).withAlphaComponent(0.74),
-                                     UIColor.greyishBlue.adjust(by: 0.4).withAlphaComponent(0.61),
-                                     UIColor.greyishBlue.adjust(by: 0.5).withAlphaComponent(0.71),
-                                     UIColor.greyishBlue.adjust(by: 0.7).withAlphaComponent(0.41)]
-            
+            let color  = ScrollChartTheme.segmentsColor
+            var colors = color.colorMap
+            if let data = data, let maximun = data.max(), let minimun = data.min() {
+                let map = color.colorMap
+                colors = data.compactMap {
+                    let result = linlin(val: Double($0),
+                                        inMin: Double(minimun),
+                                        inMax: Double(maximun),
+                                        outMin: 0,
+                                        outMax: Double(map.count - 1))
+                    return map[lrintl(result)]
+                }
+            }
             let layers = createSegmentLayers(subPaths,
-                                             lineWidth * 2,
-                                             colors,
-                                             strokeSegmentsColor,
-                                             segmentsFillColor)
-            
+                                             ScrollChartTheme.segmentLineWidth,
+                                             colors)
 #if DEBUG
             layers.enumerated().forEach { $1.name = "line segment \($0)" } // debug
 #endif
-            
             return layers
         case .points:
-            let pointSize = CGSize(width: 8, height: 8)
             let layers = createPointsLayers(points,
-                                            size: pointSize,
-                                            color: .greyishBlue)
-            layers.forEach({$0.name = "point"})
+                                            size: ScrollChartTheme.pointSize,
+                                            color: ScrollChartTheme.pointsColor)
+            
+            for (index, layer) in layers.enumerated() {
+                // Keep point on top of superlayer
+                layer.zPosition  = layersOnTopBaseZPosition + CGFloat(index)
+#if DEBUG
+                layer.name = "point \(index)"
+#endif
+            }
             return layers
         case .selectedPoint:
             if let point = maxPoint(in: renderIndex) {
                 let layer = createPointLayer(point,
-                                             size: CGSize(width: 13, height: 13),
-                                             color: .darkGreyBlueTwo)
-                layer.name = "selectedPointDefault"
+                                             size: ScrollChartTheme.selectedPointSize,
+                                             color: ScrollChartTheme.selectedPointColor)
+#if DEBUG
+                layer.name = "selectedPoint"
+#endif
                 return [layer]
             }
         case .currentPoint:
             if let point = maxPoint(in: renderIndex) {
                 let layer = createPointLayer(point,
-                                             size: CGSize(width: 11, height: 11),
-                                             color: .paleGrey)
-                layer.name = "selectedPointDefault"
+                                             size: ScrollChartTheme.currentPointSize,
+                                             color: ScrollChartTheme.currentPointColor)
+#if DEBUG
+                layer.name = "currentPoint"
+#endif
                 return [layer]
             }
         default:
@@ -99,8 +127,9 @@ extension OMScrollableChart {
         return []
     }
     var polylinePath: UIBezierPath? {
-        guard  let polylinePoints =  polylinePoints,
+        guard  let polylinePoints = polylinePoints,
                let polylinePath = polylineInterpolation.asPath(points: polylinePoints) else {
+            Log.e("Unable to get a Path from the polyline points.")
             return nil
         }
         return polylinePath
@@ -110,174 +139,24 @@ extension OMScrollableChart {
         guard  let polylinePath = polylinePath else {
             return []
         }
-        let polylineLayer: OMGradientShapeClipLayer =  OMGradientShapeClipLayer()
-        self.lineWidth = lineWidth
-        self.lineColor = color
+        let polylineLayer: OMGradientShapeClipLayer = OMGradientShapeClipLayer()
         polylineLayer.path          = polylinePath.cgPath
         polylineLayer.fillColor     = UIColor.clear.cgColor
-        polylineLayer.strokeColor   = self.lineColor.withAlphaComponent(0.5).cgColor
-        polylineLayer.lineWidth     = self.lineWidth
+        polylineLayer.strokeColor   = color.withAlphaComponent(0.5).cgColor
+        polylineLayer.lineWidth     = lineWidth
         polylineLayer.shadowColor   = UIColor.black.cgColor
-        polylineLayer.shadowOffset  = CGSize(width: 0, height:  self.lineWidth * 2)
+        polylineLayer.shadowOffset  = CGSize(width: 0, height: lineWidth * 2)
         polylineLayer.shadowOpacity = 0.5
         polylineLayer.shadowRadius  = 6.0
         // Update the frame
         polylineLayer.frame         = contentView.bounds
-        
         return [polylineLayer]
-    }
-    func makeSimplified(_ data: [Float], _ renderIndex: Int, _ boundsSize: CGSize, _ dataSource: DataSourceProtocol) {
-        let discretePoints = rawPoints(data, size: boundsSize)
-        
-        if discretePoints.count > 0 {
-            let chartData = (discretePoints, data)
-            if let approximationPoints =  simplifiedPoints( points: discretePoints,
-                                                                tolerance: simplifiedTolerance) {
-                if approximationPoints.count > 0 {
-                    self.approximationData.insert(chartData, at: renderIndex)
-                    self.pointsRender.insert(approximationPoints, at: renderIndex)
-                    var layers = dataSource.dataLayers(chart: self,
-                                                       renderIndex: renderIndex,
-                                                       section: 0, points: approximationPoints)
-                    // accumulate layers
-                    if layers.isEmpty {
-                        layers = renderDefaultLayers(renderIndex,
-                                                     points: approximationPoints)
-                    }
-                    
-                    self.renderLayers.insert(layers, at: renderIndex)
-                }
-            }
-        }
-    }
-    
-    func makeAverage(_ data: [Float], _ renderIndex: Int,_ boundsSize: CGSize, _ dataSource: DataSourceProtocol) {
-        if let points = averagedPoints(data: data,
-                                           size: boundsSize,
-                                           elementsToAverage: self.numberOfElementsToAverage) {
-            let chartData = (points, data)
-            self.averagedData.insert(chartData, at: renderIndex)
-            self.pointsRender.insert(points, at: renderIndex)
-            var layers = dataSource.dataLayers(chart: self,
-                                               renderIndex: renderIndex,
-                                               section: 0,
-                                               points: points)
-            // accumulate layers
-            if layers.isEmpty {
-                layers = renderDefaultLayers(renderIndex, points: points)
-            }
-            // accumulate layers
-            self.renderLayers.insert(layers, at: renderIndex)
-        }
-    }
-    
-    func makeDiscrete(_ data: [Float],
-                      _ renderIndex: Int,
-                      _ boundsSize: CGSize, _ dataSource: DataSourceProtocol) {
-        
-        let points = rawPoints(data, size: boundsSize)
-        if points.count > 0 {
-            let chartData = (points, data)
-            self.discreteData.insert(chartData, at: renderIndex)
-            self.pointsRender.insert(points, at: renderIndex)
-            
-            var layers = dataSource.dataLayers(chart: self,
-                                               renderIndex: renderIndex,
-                                               section: 0,
-                                               points: points)
-            //  use the private
-            if layers.isEmpty {
-                layers = renderDefaultLayers(renderIndex,
-                                             points: points)
-            }
-            // accumulate layers
-            self.renderLayers.insert(layers, at: renderIndex)
-        }
-    }
-    
-    // Lineal Regression
-    private func linregressPoints(data: ChartData, size: CGSize, numberOfElements: Int, renderIndex: Int) -> ChartData {
-        let originalDataIndex: [Float] = data.points.enumerated().map { Float($0.offset) }
-        // Create the regression function for current data
-        let linFunction: (slope: Float, intercept: Float) = Stadistics.linregress(originalDataIndex, data.data)
-        var resulLinregress: [Float] = [Float].init(repeating: 0, count: numberOfElements)
-        for index in 0...numberOfElements - 1 {
-            resulLinregress[index] = linFunction.slope * Float(originalDataIndex.count + index) + linFunction.intercept
-        }
-        // add the new points
-        let newData = data.data + resulLinregress
-        let generator  = scaledPointsGenerator[renderIndex]
-        let newPoints =  generator.makePoints(data: newData, size: size)
-        return (newPoints, newData)
-    }
-    
-    private func makeLinregress(_ data: [Float],
-                                _ renderIndex: Int,
-                                _ boundsSize: CGSize,
-                                _ dataSource: DataSourceProtocol) {
-        let points = rawPoints(data, size: boundsSize)
-        if points.count > 0 {
-            let chartData = (points, data)
-            let linregressData = linregressPoints(data: chartData,
-                                                  size: boundsSize,
-                                                  numberOfElements: self.numberOfRegressValues,
-                                                  renderIndex: renderIndex)
-            self.linregressData.insert(linregressData, at: renderIndex)
-            self.pointsRender.insert(linregressData.0, at: renderIndex)
-            var layers = dataSource.dataLayers(chart: self,
-                                               renderIndex: renderIndex,
-                                               section: 0,
-                                               points: linregressData.0)
-            // accumulate layers
-            if layers.isEmpty {
-                layers = renderDefaultLayers(renderIndex,
-                                             points: linregressData.0)
-            }
-            
-            // accumulate layers
-            self.renderLayers.insert(layers, at: renderIndex)
-        }
-    }
-    
-    func regressBondsSize(_ renderIndex: Int) -> CGSize {
-        let size = contentView.bounds.size
-        let numOfPoints = CGFloat(self.renderDataPoints[renderIndex].count)
-        let regressWidth = (self.sectionWidth * CGFloat(self.numberOfRegressValues))
-        let width = numOfPoints * self.sectionWidth + regressWidth
-        return  CGSize(width: width,
-                       height: size.height)
-    }
-    
-    func discreteBondsSize(_ renderIndex: Int) -> CGSize {
-        let size = contentView.bounds.size
-        return CGSize(width: CGFloat(self.renderDataPoints[renderIndex].count) * self.sectionWidth, height: size.height)
-    }
-    
-    /// renderLayers
-    /// - Parameters:
-    ///   - renderIndex: render index
-    ///   - renderAs: RenderData
-    func renderLayers(_ renderIndex: Int, renderAs: RenderType) {
-        guard let dataSource = dataSource else {
-            return
-        }
-        let currentRenderData = renderDataPoints[renderIndex]
-        switch renderAs {
-        case .simplified(let value):
-            self.simplifiedTolerance = value
-            makeSimplified(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
-        case .averaged(let value):
-            self.numberOfElementsToAverage = value
-            makeAverage(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
-        case .discrete: makeDiscrete(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
-        case .linregress(let value):
-            self.numberOfRegressValues = value
-            makeLinregress(currentRenderData, renderIndex, regressBondsSize(renderIndex), dataSource)
-        }
-        self.renderType.insert(renderAs, at: renderIndex)
     }
     
     func createPointsLayers( _ points: [CGPoint], size: CGSize, color: UIColor) -> [OMShapeLayerRadialGradientClipPath] {
+        guard  points.count > 0 else {
+            return []
+        }
         var layers = [OMShapeLayerRadialGradientClipPath]()
         for point in points {
             let circleLayer = createPointLayer(point, size: size, color: color)
@@ -336,7 +215,10 @@ extension OMScrollableChart {
                                 columnIndex: Int,
                                 count: Int,
                                 color: UIColor) -> [OMGradientShapeClipLayer] {
-        
+        guard  points.count > 0 else {
+            return []
+        }
+
         var layers =  [OMGradientShapeClipLayer]()
         for currentPointIndex in 0..<points.count - 1 {
             
@@ -370,7 +252,28 @@ extension OMScrollableChart {
         }
         return layers
     }
-    
+    fileprivate func addSegmentLayer(_ color: UIColor, _ lineWidth: CGFloat, _ path: UIBezierPath, _ layers: inout [OMGradientShapeClipLayer]) {
+        let shapeSegmentLayer = OMGradientShapeClipLayer()
+        shapeSegmentLayer.strokeColor   = color.cgColor
+        
+        shapeSegmentLayer.lineWidth     = lineWidth
+        shapeSegmentLayer.path          = path.cgPath
+        let box = path.bounds
+        
+        shapeSegmentLayer.position      = box.origin
+        shapeSegmentLayer.fillColor     = color.withAlphaComponent(0.6).cgColor
+        shapeSegmentLayer.bounds        = box //.insetBy(dx: -(lineWidth), dy: -(lineWidth))
+        shapeSegmentLayer.anchorPoint   = .zero
+        shapeSegmentLayer.zPosition     =  40
+        shapeSegmentLayer.lineCap       = .square
+        shapeSegmentLayer.lineJoin      = .round
+        shapeSegmentLayer.opacity       = 1.0
+        
+        shapeSegmentLayer.setGlow( with: color)
+        
+        layers.append(shapeSegmentLayer)
+        shapeSegmentLayer.setNeedsLayout()
+    }
     
     ///
     /// createSegmentLayers
@@ -385,37 +288,184 @@ extension OMScrollableChart {
     ///
     func createSegmentLayers(_ segmentsPaths: [UIBezierPath],
                              _ lineWidth: CGFloat = 0.5,
-                             _ colors: [UIColor] = [.white, .red],
-                             _ fillColor: UIColor? = .clear,
-                             _ strokeColor: UIColor? = nil) -> [OMGradientShapeClipLayer] {
+                             _ colors: [UIColor] = [.white, .red]) -> [OMGradientShapeClipLayer] {
         var layers = [OMGradientShapeClipLayer]()
         for (idx, path) in segmentsPaths.enumerated() {
-            if idx % 4 == 0 {
-                continue
-            }
-            let shapeSegmentLayer = OMGradientShapeClipLayer()
-            let color = colors[idx % colors.count]
-            shapeSegmentLayer.strokeColor = color.withAlphaComponent(0.8).cgColor
-            
-            shapeSegmentLayer.lineWidth     = lineWidth
-            shapeSegmentLayer.path          = path.cgPath
-            let box = path.bounds
-            
-            shapeSegmentLayer.position      = box.origin
-            shapeSegmentLayer.fillColor     = color.darker.withAlphaComponent(0.12).cgColor
-            shapeSegmentLayer.bounds        =  box //.insetBy(dx: -(lineWidth), dy: -(lineWidth))
-            shapeSegmentLayer.anchorPoint   = .zero
-            shapeSegmentLayer.zPosition     =  40
-            shapeSegmentLayer.lineCap       = .square
-            shapeSegmentLayer.lineJoin      = .round
-            shapeSegmentLayer.opacity       = 1.0
-            
-            shapeSegmentLayer.setGlow( with: color)
-            
-            layers.append(shapeSegmentLayer)
-            shapeSegmentLayer.setNeedsLayout()
-            
+            let color = colors[idx]
+            addSegmentLayer(color, lineWidth, path, &layers)
         }
         return layers
+    }
+}
+
+//
+// Query the data layers to the delegate
+//
+extension OMScrollableChart {
+        
+    func makeSimplified(_ data: [Float], _ renderIndex: Int, _ boundsSize: CGSize, _ dataSource: DataSourceProtocol) {
+        guard let renderDelegate = renderDelegate else {
+            return
+        }
+        let discretePoints = rawPoints(data, size: boundsSize)
+        
+        if discretePoints.count > 0 {
+            let chartData = (discretePoints, data)
+            if let approximationPoints =  simplifiedPoints( points: discretePoints,
+                                                                tolerance: simplifiedTolerance) {
+                if approximationPoints.count > 0 {
+                    self.approximationData.insert(chartData, at: renderIndex)
+                    self.pointsRender.insert(approximationPoints, at: renderIndex)
+                    var layers = renderDelegate.dataLayers(chart: self,
+                                                       renderIndex: renderIndex,
+                                                       section: 0, points: approximationPoints)
+                    // accumulate layers
+                    if layers.isEmpty {
+                        layers = renderDefaultLayers(renderIndex,
+                                                     points: approximationPoints,
+                                                     data: data)
+                    }
+                    
+                    self.renderLayers.insert(layers, at: renderIndex)
+                }
+            }
+        }
+    }
+    
+    func makeAverage(_ data: [Float], _ renderIndex: Int,_ boundsSize: CGSize, _ dataSource: DataSourceProtocol) {
+        guard let renderDelegate = renderDelegate else {
+            return
+        }
+        if let points = averagedPoints(data: data,
+                                           size: boundsSize,
+                                           elementsToAverage: self.numberOfElementsToAverage) {
+            let chartData = (points, data)
+            self.averagedData.insert(chartData, at: renderIndex)
+            self.pointsRender.insert(points, at: renderIndex)
+            var layers = renderDelegate.dataLayers(chart: self,
+                                               renderIndex: renderIndex,
+                                               section: 0,
+                                               points: points)
+            // accumulate layers
+            if layers.isEmpty {
+                layers = renderDefaultLayers(renderIndex, points: points, data: data)
+            }
+            // accumulate layers
+            self.renderLayers.insert(layers, at: renderIndex)
+        }
+    }
+    
+    func makeDiscrete(_ data: [Float],
+                      _ renderIndex: Int,
+                      _ boundsSize: CGSize, _ dataSource: DataSourceProtocol) {
+        guard let renderDelegate = renderDelegate else {
+            return
+        }
+        let points = rawPoints(data, size: boundsSize)
+        if points.count > 0 {
+            let chartData = (points, data)
+            self.discreteData.insert(chartData, at: renderIndex)
+            self.pointsRender.insert(points, at: renderIndex)
+            
+            var layers = renderDelegate.dataLayers(chart: self,
+                                               renderIndex: renderIndex,
+                                               section: 0,
+                                               points: points)
+            //  use the private
+            if layers.isEmpty {
+                layers = renderDefaultLayers(renderIndex,
+                                             points: points,
+                                             data: data)
+            }
+            // accumulate layers
+            self.renderLayers.insert(layers, at: renderIndex)
+        }
+    }
+
+    // Lineal Regression
+    private func linregressPoints(data: ChartData, size: CGSize, numberOfElements: Int, renderIndex: Int) -> ChartData {
+        let originalDataIndex: [Float] = data.points.enumerated().map { Float($0.offset) }
+        // Create the regression function for current data
+        let linFunction: (slope: Float, intercept: Float) = Stadistics.linregress(originalDataIndex, data.data)
+        var resulLinregress: [Float] = [Float].init(repeating: 0, count: numberOfElements)
+        for index in 0...numberOfElements - 1 {
+            resulLinregress[index] = linFunction.slope * Float(originalDataIndex.count + index) + linFunction.intercept
+        }
+        // add the new points
+        let newData = data.data + resulLinregress
+        let generator  = scaledPointsGenerator[renderIndex]
+        let newPoints =  generator.makePoints(data: newData, size: size)
+        return (newPoints, newData)
+    }
+    
+    private func makeLinregress(_ data: [Float],
+                                _ renderIndex: Int,
+                                _ boundsSize: CGSize,
+                                _ dataSource: DataSourceProtocol) {
+        guard let renderDelegate = renderDelegate else {
+            return
+        }
+        let points = rawPoints(data, size: boundsSize)
+        if points.count > 0 {
+            let chartData = (points, data)
+            let linregressData = linregressPoints(data: chartData,
+                                                  size: boundsSize,
+                                                  numberOfElements: self.numberOfRegressValues,
+                                                  renderIndex: renderIndex)
+            self.linregressData.insert(linregressData, at: renderIndex)
+            self.pointsRender.insert(linregressData.0, at: renderIndex)
+            var layers = renderDelegate.dataLayers(chart: self,
+                                               renderIndex: renderIndex,
+                                               section: 0,
+                                               points: linregressData.0)
+            // accumulate layers
+            if layers.isEmpty {
+                layers = renderDefaultLayers(renderIndex,
+                                             points: linregressData.0,
+                                             data: linregressData.data)
+            }
+            
+            // accumulate layers
+            self.renderLayers.insert(layers, at: renderIndex)
+        }
+    }
+    
+    func regressBondsSize(_ renderIndex: Int) -> CGSize {
+        let size = contentView.bounds.size
+        let numOfPoints = CGFloat(self.renderDataPoints[renderIndex].count)
+        let regressWidth = (self.sectionWidth * CGFloat(self.numberOfRegressValues))
+        let width = numOfPoints * self.sectionWidth + regressWidth
+        return  CGSize(width: width,
+                       height: size.height)
+    }
+    
+    func discreteBondsSize(_ renderIndex: Int) -> CGSize {
+        let size = contentView.bounds.size
+        return CGSize(width: CGFloat(self.renderDataPoints[renderIndex].count) * self.sectionWidth, height: size.height)
+    }
+    
+    /// renderLayers
+    /// 
+    /// - Parameters:
+    ///   - renderIndex: render index
+    ///   - renderAs: RenderData
+    func renderLayers(_ renderIndex: Int, renderAs: RenderType) {
+        guard let dataSource = dataSource else {
+            return
+        }
+        let currentRenderData = renderDataPoints[renderIndex]
+        switch renderAs {
+        case .simplified(let value):
+            self.simplifiedTolerance = value
+            makeSimplified(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
+        case .averaged(let value):
+            self.numberOfElementsToAverage = value
+            makeAverage(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
+        case .discrete: makeDiscrete(currentRenderData, renderIndex, discreteBondsSize(renderIndex), dataSource)
+        case .linregress(let value):
+            self.numberOfRegressValues = value
+            makeLinregress(currentRenderData, renderIndex, regressBondsSize(renderIndex), dataSource)
+        }
+        self.renderType.insert(renderAs, at: renderIndex)
     }
 }

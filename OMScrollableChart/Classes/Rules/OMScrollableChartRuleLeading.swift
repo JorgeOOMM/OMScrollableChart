@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
 import UIKit
+import GUILib
 
 public enum Index: Int {
     case invalid = -1
@@ -77,19 +76,17 @@ extension RuleProtocol {
         return Index.invalid.rawValue
     }
 }
-
 //
-// MARK: - OMScrollableLeadingChartRule -
+// MARK: - OMScrollableChartRuleLeading -
 //
-class OMScrollableLeadingChartRule: UIView, RuleProtocol {
+class OMScrollableChartRuleLeading: UIView, RuleProtocol {
     private var labelViews = [UIView]()
-    var views: [UIView]?  {
-        return labelViews
-    }
     var type: RuleType = .leading
     var chart: OMScrollableChart!
     var decorationColor: UIColor = .black
-
+    var fontStrokeColor: UIColor = .lightGray
+    var ruleSize: CGSize = CGSize(width: 60, height: 0)
+    var leftInset: CGFloat = 15
     required init(chart: OMScrollableChart!) {
         super.init(frame: .zero)
         self.chart = chart
@@ -99,19 +96,19 @@ class OMScrollableLeadingChartRule: UIView, RuleProtocol {
         super.init(coder: coder)
         backgroundColor = .clear
     }
+    var views: [UIView]?  {
+        return labelViews
+    }
     var fontColor = UIColor.black {
         didSet {
             views?.forEach({($0 as? UILabel)?.textColor = fontColor})
         }
     }
-    var fontStrokeColor = UIColor.lightGray
     var font = UIFont.systemFont(ofSize: 14, weight: .thin) {
         didSet {
             views?.forEach({($0 as? UILabel)?.font = font})
         }
     }
-    var ruleSize: CGSize = CGSize(width: 60, height: 0)
-    var leftInset: CGFloat = 15
     func layoutRule() -> Bool {
         guard let chart = chart else {
             return false
@@ -145,11 +142,10 @@ class OMScrollableLeadingChartRule: UIView, RuleProtocol {
         super.didMoveToSuperview()
         setNeedsLayout()
     }
-    var oldFrame: CGRect = .zero
     override func layoutSubviews() {
         super.layoutSubviews()
         if !layoutRule() { // TODO: update layout
-           // Log.print("Unable to create the rule layout",.error)
+            Log.e("Unable to create the rule layout")
         }
     }
 }

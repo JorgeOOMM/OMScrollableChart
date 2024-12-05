@@ -14,7 +14,7 @@
 
 import UIKit
 
-public struct OMScrollableChartRuleManager {
+public struct OMScrollableChartRules {
     var chart: OMScrollableChart
     init(chart: OMScrollableChart) {
         self.chart = chart
@@ -62,7 +62,7 @@ public struct OMScrollableChartRuleManager {
     
     /// Create and add rules
     mutating func configure(with color: UIColor, and footerColor: UIColor) {
-        let rootRule = OMScrollableLeadingChartRule(chart: chart)
+        let rootRule = OMScrollableChartRuleLeading(chart: chart)
         rootRule.chart = chart
         rootRule.font = ruleFont
         rootRule.fontColor = color
