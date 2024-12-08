@@ -15,7 +15,7 @@
 import UIKit
 
 @IBDesignable
-class OMBubbleShapeView: UIView {
+public class OMBubbleShapeView: UIView {
     @IBInspectable var lineWidth:    CGFloat = 1         { didSet { setNeedsDisplay() } }
     @IBInspectable var calloutSize:  CGFloat = 7.5       { didSet { setNeedsDisplay() } }
     @IBInspectable var fillColor:    UIColor = .paleGrey { didSet { setNeedsDisplay() } }
@@ -27,11 +27,11 @@ class OMBubbleShapeView: UIView {
     var gradientMask: UIImage? { return isFlipped ? gradientMaskInvert : gradientMaskNormal}
     internal let rgbColorspace = CGColorSpaceCreateDeviceRGB()
     
-    override func didMoveToSuperview() {
+    public override func didMoveToSuperview() {
         super.didMoveToSuperview()
         defaultLayerInitializer()
     }
-    override func prepareForInterfaceBuilder() {
+    public override func prepareForInterfaceBuilder() {
         super.prepareForInterfaceBuilder()
         setNeedsDisplay()
     }
@@ -199,7 +199,7 @@ class OMBubbleShapeView: UIView {
         UIGraphicsEndImageContext()
         return sharedMask
     }()
-    override func draw(_ rect: CGRect) {
+    public override func draw(_ rect: CGRect) {
         super.draw(rect)
         if let ctx = UIGraphicsGetCurrentContext() {
             let calloutPath = calloutClipPath(with: calloutDirection,

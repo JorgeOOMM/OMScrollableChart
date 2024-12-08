@@ -69,7 +69,7 @@ extension OMScrollableChart {
                                      pointIndex: Int,
                                      duration: TimeInterval = 10.0) -> CAAnimation {
         self.layerToRide = layerToRide
-        self.rideAnim = pathRideToPointAnimation(cgPath: path.cgPath,
+        self.ridePathAnimation = pathRideToPointAnimation(cgPath: path.cgPath,
                                                  pointIndex: pointIndex,
                                                  duration: duration)
         let anim = CABasicAnimation(keyPath: "rideProgress")

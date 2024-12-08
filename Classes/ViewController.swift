@@ -61,10 +61,10 @@ class ViewController: UIViewController, DataSourceProtocol {
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-        chart.bounces = false
-        chart.dataSource = self
-        chart.backgroundColor = .clear
-        chart.isPagingEnabled = true
+        self.chart.bounces = false
+        self.chart.dataSource = self
+        self.chart.backgroundColor = .clear
+        self.chart.isPagingEnabled = true
         
         segmentInterpolation.removeAllSegments()
         segmentInterpolation.insertSegment(withTitle: "none", at: 0, animated: false)
@@ -73,7 +73,7 @@ class ViewController: UIViewController, DataSourceProtocol {
         segmentInterpolation.insertSegment(withTitle: "hermite", at: 3, animated: false)
         segmentInterpolation.insertSegment(withTitle: "catmullRom", at: 4, animated: false)
         segmentInterpolation.selectedSegmentIndex = 4 // catmullRom
-        chart.polylineInterpolation = .catmullRom(0.5)
+        self.chart.polylineInterpolation = .catmullRom(0.5)
         
         segmentTypeOfData.removeAllSegments()
         segmentTypeOfData.insertSegment(withTitle: "discrete", at: 0, animated: false)
@@ -89,7 +89,7 @@ class ViewController: UIViewController, DataSourceProtocol {
         sliderAverage.minimumValue    = 0
         sliderAverage.value           = Float(self.chart.numberOfElementsToAverage)
         
-        _ = chart.updateDataSourceData()
+        self.chart.updateBasicSourceData()
         
         if let scaledPointsGenerator = chart.scaledPointsGenerator.first {
             sliderLimit.maximumValue  = scaledPointsGenerator.maximumValue
@@ -99,9 +99,9 @@ class ViewController: UIViewController, DataSourceProtocol {
     }
     @IBAction  func limitsSliderChange( _ sender: UISlider)  {
         if sender == sliderLimit {
-            let generator = chart.scaledPointsGenerator.first
+            let generator = self.chart.scaledPointsGenerator.first
             generator?.minimum =  Float(CGFloat(sliderLimit.value))
-            _ = chart.updateDataSourceData()
+            self.chart.updateBasicSourceData()
         }
     }
     @IBAction  func simplifySliderChange( _ sender: UISlider)  {
@@ -137,6 +137,6 @@ class ViewController: UIViewController, DataSourceProtocol {
         default:
             assert(false)
         }
-        chart.updateLayoutForceReload()
+        self.chart.updateLayout()
     }
 }

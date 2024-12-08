@@ -69,7 +69,7 @@ extension OMScrollableChart {
         animation.fromValue     = pathStart.cgPath
         animation.toValue       = pathEnd.cgPath
         animation.duration      = duration
-        animation.isRemovedOnCompletion  = false
+        animation.isRemovedOnCompletion  = true
         animation.fillMode = .forwards
         animation.delegate      = self
         animation.completion = {  finished in
@@ -208,12 +208,12 @@ extension OMScrollableChart {
     ///
 
     func animateFadingPoints(_ layers: [OMGradientShapeClipLayer],
-                               delay: TimeInterval = 0.1,
                                duration: TimeInterval = 2.0,
                                fromValue: Float = 1.0,
-                               toValue: Float = 0.3) {
+                               toValue: Float = 0.5) {
+        var delay: TimeInterval = 0.0
         var currentDelay = delay
-        let incremenatlDelay = 0.05
+        let incremenatlDelay = duration / Double(layers.count)
         for point in layers {
             point.opacity = fromValue
             let fadeAnimation = CABasicAnimation(keyPath: "opacity")
@@ -246,6 +246,7 @@ extension OMScrollableChart {
 //    }
     
     /// animateOnRenderLayerSelection
+    ///
     /// - Parameters:
     ///   - selectedLayer: OMGradientShapeClipLayer
     ///   - renderIndex: render index
@@ -254,31 +255,20 @@ extension OMScrollableChart {
                                        renderIndex:Int,
                                        duration: TimeInterval = 2.0) {
         var index: Int = 0
-        guard renderLayers.count > 0 else {
+        guard renderLayers.count > 0, let selectedLayer = selectedLayer else {
             return
         }
-        if let selectedLayer = selectedLayer {
-            index = self.renderLayers[renderIndex].firstIndex(of: selectedLayer) ?? 0
-        }
-        let count = self.renderLayers[renderIndex].count - 1
+
+        index = self.renderLayers[renderIndex].firstIndex(of: selectedLayer) ?? 0
+        
+        let count = self.renderLayers[renderIndex].count
         let pointBegin = self.renderLayers[renderIndex].takeElements(index)
         let pointEnd   = self.renderLayers[renderIndex].takeElements(count - index,
                                                                      startAt: index + 1)
-        animateFadingPoints(pointBegin.reversed(), duration: duration)
-        animateFadingPoints(pointEnd, duration: duration)
+        animateFadingPoints(pointBegin.reversed(), duration: duration * 0.5, fromValue: 1.0, toValue: 0.5)
+        animateFadingPoints(pointEnd, duration: duration * 0.5, fromValue: 1.0, toValue: 0.5)
     }
-
     
-    func animateDashLinesPhase() {
-        for layer in dashLineLayers {
-            let animation = CABasicAnimation(keyPath: "lineDashPhase")
-            animation.fromValue = 0
-            animation.toValue = layer.lineDashPattern?.reduce(0) { $0 - $1.intValue } ?? 0
-            animation.duration = 1
-            animation.repeatCount = .infinity
-            layer.add(animation, forKey: "line")
-        }
-    }
     //let fromValue =  self.contentSize.width /  self.contentOffset.x == 0 ? 1 :  self.contentOffset.x
      // self.contentOffset.x / self.contentSize.width
     

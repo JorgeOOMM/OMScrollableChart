@@ -61,15 +61,15 @@ public struct OMScrollableChartRules {
     func showRules() { rules.forEach { $0.isHidden = false }}
     
     /// Create and add rules
-    mutating func configure(with color: UIColor, and footerColor: UIColor) {
+    mutating func configure() {
         let rootRule = OMScrollableChartRuleLeading(chart: chart)
         rootRule.chart = chart
         rootRule.font = ruleFont
-        rootRule.fontColor = color
+        rootRule.fontColor = chart.fontRootRuleColor
         let footerRule = OMScrollableChartRuleFooter(chart: chart)
         footerRule.chart = chart
         footerRule.font = ruleFont
-        footerRule.fontColor = footerColor
+        footerRule.fontColor = chart.fontFooterRuleColor
         self.rootRule = rootRule
         self.footerRule = footerRule
         rules.append(rootRule)

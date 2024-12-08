@@ -117,7 +117,7 @@ class OMScrollableChartRuleLeading: UIView, RuleProtocol {
         labelViews.removeAll()
         let fontSize: CGFloat = font.pointSize
                 
-        for (index, item) in chart.ruleManager.rulesPoints.enumerated() {
+        for (index, item) in chart.rules.rulesPoints.enumerated() {
                 if let stepString = chart.currencyFormatter.string(from: NSNumber(value: chart.rulesMarks[index])) {
                     let string = NSAttributedString(string: stepString,
                                                     attributes: [NSAttributedString.Key.font: self.font,

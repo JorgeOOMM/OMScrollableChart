@@ -16,12 +16,14 @@ import Foundation
 import UIKit
 
 extension UIView {
-    func keyFrameGrowAnimation(duration: CFTimeInterval) -> CAKeyframeAnimation {
+    func growAnimation(duration: CFTimeInterval) -> CAKeyframeAnimation {
         let boundsOvershootAnimation = CAKeyframeAnimation(keyPath: "transform")
         
         let startingScale   = CATransform3DScale(layer.transform, 0, 0, 0)
-        let overshootScale  = CATransform3DScale(layer.transform, 1.2, 1.2, 1.0)
+        let overshootScale  = CATransform3DScale(layer.transform, 1.3, 1.3, 1.0)
         let undershootScale = CATransform3DScale(layer.transform, 0.9, 0.9, 1.0)
+        let overshootScale2  = CATransform3DScale(layer.transform, 1.2, 1.2, 1.0)
+        let undershootScale2 = CATransform3DScale(layer.transform, 0.8, 0.8, 1.0)
         let endingScale     = layer.transform
         
         boundsOvershootAnimation.duration = duration
@@ -29,9 +31,11 @@ extension UIView {
         boundsOvershootAnimation.values = [NSValue(caTransform3D: startingScale),
                                            NSValue(caTransform3D: overshootScale),
                                            NSValue(caTransform3D: undershootScale),
+                                           NSValue(caTransform3D: overshootScale2),
+                                           NSValue(caTransform3D: undershootScale2),
                                            NSValue(caTransform3D: endingScale)]
         
-        boundsOvershootAnimation.keyTimes = [0.0, 0.5, 0.9, 1.0].map{ NSNumber(value: $0) }
+        boundsOvershootAnimation.keyTimes = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0].map{ NSNumber(value: $0) }
         
         boundsOvershootAnimation.timingFunctions = [
             CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut),
@@ -44,11 +48,17 @@ extension UIView {
         return boundsOvershootAnimation
         
     }
+    
     func grow(duration: CFTimeInterval) {
-        self.layer.add(keyFrameGrowAnimation(duration: duration),
+        self.layer.add(growAnimation(duration: duration),
                        forKey: "keyFrameGrowAnimation")
     }
-    public func shakeGrow(duration: CFTimeInterval) {
+    
+    func shakeGrow(duration: CFTimeInterval) {
+        self.layer.add(shakeGrowAnimation(duration: duration),
+                       forKey: "shakeGrowAnimation")
+    }
+    public func shakeGrowAnimation(duration: CFTimeInterval) -> CAAnimation {
         let translation = CAKeyframeAnimation(keyPath: "transform.translation.x")
         translation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
         translation.values = [-5, 5, -5, 5, -3, 3, -2, 2, 0]
@@ -60,12 +70,12 @@ extension UIView {
             return radians
         }
         let shakeGroup: CAAnimationGroup = CAAnimationGroup()
-        shakeGroup.animations = [keyFrameGrowAnimation(duration: duration),
+        shakeGroup.animations = [growAnimation(duration: duration),
                                  translation,
                                  rotation,
                                  translation,
-                                 keyFrameGrowAnimation(duration: duration)]
+                                 growAnimation(duration: duration)]
         shakeGroup.duration = duration
-        self.layer.add(shakeGroup, forKey: "shakeIt")
+        return shakeGroup
     }
 }

@@ -44,7 +44,7 @@ class OMScrollableChartRuleFooter: UIStackView, RuleProtocol {
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    var ruleSize: CGSize { return CGSize(width: 0, height: self.chart.ruleManager.footerViewHeight)}
+    var ruleSize: CGSize { return CGSize(width: 0, height: self.chart.rules.footerViewHeight)}
     var fontColor = UIColor.darkGreyBlueTwo {
         didSet {
             views?.forEach({($0 as? UILabel)?.textColor = fontColor})

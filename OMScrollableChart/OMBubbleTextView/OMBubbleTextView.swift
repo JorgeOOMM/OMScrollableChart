@@ -22,8 +22,7 @@ public protocol TooltipleableView where Self: UIView {
 
 // MARK: - OMBubbleTextView -
 @IBDesignable
-class OMBubbleTextView: OMBubbleShapeView, TooltipleableView {
-    
+public class OMBubbleTextView: OMBubbleShapeView, TooltipleableView {
     //  text alignment.b j
     @IBInspectable var textAlignment: NSTextAlignment = .center {
         didSet {setNeedsDisplay()}
@@ -51,7 +50,7 @@ class OMBubbleTextView: OMBubbleShapeView, TooltipleableView {
     }
     private var boundingSize: CGSize = .zero
     /// Called when a designable object is created in Interface Builder.
-    override func prepareForInterfaceBuilder() {
+    public override func prepareForInterfaceBuilder() {
         super.prepareForInterfaceBuilder()
         
         self.string = """
@@ -78,7 +77,7 @@ class OMBubbleTextView: OMBubbleShapeView, TooltipleableView {
     // Summary
     //
     // Asks the view to calculate and return the size that best fits the specified size.
-    override func sizeThatFits( _ size: CGSize) -> CGSize {
+    public override func sizeThatFits( _ size: CGSize) -> CGSize {
         var result = super.sizeThatFits(size)
         if let attributtedString = attributtedString {
             
@@ -224,7 +223,7 @@ class OMBubbleTextView: OMBubbleShapeView, TooltipleableView {
         animateRotationAndPerspective(layer: self.layer)
     }
     
-    override func draw(_ rect: CGRect) {
+    public override func draw(_ rect: CGRect) {
         super.draw(rect)
         if let ctx = UIGraphicsGetCurrentContext() {
             UIGraphicsPushContext(ctx)

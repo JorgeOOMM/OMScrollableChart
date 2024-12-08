@@ -20,9 +20,11 @@
 //
 
 import UIKit
+import GUILib
 
 extension OMScrollableChart {
     /// selectNearestRenderLayer
+    ///
     /// - Parameters:
     ///   - point: point
     ///   - renderIndex: render index
@@ -38,20 +40,27 @@ extension OMScrollableChart {
                                        renderIndex: renderIndex)
     }
     /// selectRenderLayer
+    ///
     /// - Parameters:
     ///   - layer: layer
     ///   - renderIndex: Int
     func selectRenderLayer(_ layer: OMGradientShapeClipLayer, renderIndex: Int) {
-        let allUnselectedRenderLayers = self.renderLayers[renderIndex].filter { $0 != layer }
-        print("allUnselectedRenderLayers = \(allUnselectedRenderLayers.count)")
-        allUnselectedRenderLayers.forEach { (layer: OMGradientShapeClipLayer) in
+        self.renderLayers[renderIndex].filter { $0 != layer }.forEach { (layer: OMGradientShapeClipLayer) in
             layer.gardientColor = self.unselectedColor
             layer.opacity      = self.unselectedOpacy
         }
         layer.gardientColor = self.selectedColor
         layer.opacity   = self.selectedOpacy
     }
+    
+    func deselectRenderLayer(renderIndex: Int) {
+        self.renderLayers[renderIndex].forEach { (layer: OMGradientShapeClipLayer) in
+            layer.gardientColor = self.selectedColor
+            layer.opacity   = self.selectedOpacy
+        }
+    }
     /// locationToLayer
+    ///
     /// - Parameters:
     ///   - location: CGPoint
     ///   - renderIndex: renderIndex
@@ -74,6 +83,7 @@ extension OMScrollableChart {
         }
     }
     /// hitTestAsLayer
+    ///
     /// - Parameter location: Point location
     /// - Returns: CALayer
     func hitTestAsLayer( _ location: CGPoint) -> CALayer? {
@@ -83,6 +93,7 @@ extension OMScrollableChart {
         return nil
     }
     /// didSelectedRenderLayerIndex
+    ///
     /// - Parameters:
     ///   - layer: layer
     ///   - renderIndex: Int
@@ -103,6 +114,7 @@ extension OMScrollableChart {
                                            layer: layer)
     }
     /// selectRenderLayerWithAnimation
+    ///
     /// - Parameters:
     ///   - layerPoint: OMGradientShapeClipLayer
     ///   - selectedPoint: CGPoint
@@ -118,8 +130,7 @@ extension OMScrollableChart {
         CATransaction.setAnimationDuration(duration)
         CATransaction.begin()
         
-        
-        // selectRenderLayer(layerPoint, renderIndex: renderIndex)
+
         
         if self.animatePointLayers {
             self.animateOnRenderLayerSelection(layerPoint,
@@ -187,6 +198,10 @@ extension OMScrollableChart {
         CATransaction.commit()
         CATransaction.unlock()
     }
+    /// locationFromTouchInContentView
+    ///
+    /// - Parameter touches: Set<UITouch>
+    /// - Returns: CGPoint
     func locationFromTouchInContentView(_ touches: Set<UITouch>) -> CGPoint {
         if let touch = touches.first {
             return touch.location(in: self.contentView)

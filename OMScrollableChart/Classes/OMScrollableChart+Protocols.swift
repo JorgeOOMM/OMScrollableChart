@@ -33,7 +33,7 @@ protocol RenderLocationProtocol {
 protocol ChartProtocol {
     associatedtype ChartData
     var discreteData: [ChartData?] {get set}
-    func updateDataSourceData() -> Bool
+    func updateBasicSourceData() -> Bool
 }
 
 public enum RenderType: Equatable{

@@ -72,9 +72,9 @@ extension OMScrollableChart {
         // Dont be adaptative, only round the 1000
         if value > 10000 {
             let roundToNearest = round(value / 1000) * 1000
-            ruleManager.rulesMarks.append(roundToNearest)
+            rules.rulesMarks.append(roundToNearest)
         } else {
-            ruleManager.rulesMarks.append(round(value))
+            rules.rulesMarks.append(round(value))
         }
     }
     
@@ -117,10 +117,10 @@ extension OMScrollableChart {
     func makeRulesPoints() -> Bool {
         let generator = scaledPointsGenerator[Renders.polyline.rawValue]
         guard numberOfRuleMarks > 0,generator.range != 0 else { return false }
-        ruleManager.rulesMarks.removeAll()
+        rules.rulesMarks.removeAll()
         internalCalcRules(generator: generator)
-        ruleManager.rulesPoints = generator.makePoints(data: rulesMarks,
-                                                             size: drawableFrame.size)
+        rules.rulesPoints = generator.makePoints(data: rulesMarks,
+                                                 size: drawableFrame.size)
         return true
     }
     
@@ -130,16 +130,16 @@ extension OMScrollableChart {
     
     func layoutRules() {
         // Layout rules lines
-        let oldRulesPoints = ruleManager.rulesPoints
-        guard let leadingRule = ruleManager.rootRule else {
+        let oldRulesPoints = rules.rulesPoints
+        guard let leadingRule = rules.rootRule else {
             return
         }
         guard makeRulesPoints() else { return }
-        if ruleManager.rulesPoints == oldRulesPoints { return }
+        if rules.rulesPoints == oldRulesPoints { return }
         // Update
-        ruleManager.addToVerticalRuleMarks(leadingRule: leadingRule)
+        rules.addToVerticalRuleMarks(leadingRule: leadingRule)
         // Mark for display the rule.
-        ruleManager.rules.forEach { rule in
+        rules.rules.forEach { rule in
             _ = rule.layoutRule()
             rule.setNeedsDisplay()
         }

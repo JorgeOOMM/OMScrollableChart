@@ -51,6 +51,7 @@ extension UIColor {
 
 
 let layersOnTopBaseZPosition: CGFloat = 10000
+let layersUnderTopBaseZPosition: CGFloat = 1000
 
 extension OMScrollableChart {
     private func renderDefaultLayers(_ renderIndex: Int, points: [CGPoint], data: [Float]? = nil) -> [OMGradientShapeClipLayer] {
@@ -95,7 +96,7 @@ extension OMScrollableChart {
             
             for (index, layer) in layers.enumerated() {
                 // Keep point on top of superlayer
-                layer.zPosition  = layersOnTopBaseZPosition + CGFloat(index)
+                layer.zPosition  = layersUnderTopBaseZPosition + CGFloat(index)
 #if DEBUG
                 layer.name = "point \(index)"
 #endif
@@ -109,6 +110,8 @@ extension OMScrollableChart {
 #if DEBUG
                 layer.name = "selectedPoint"
 #endif
+                // Keep point on top of superlayer
+                layer.zPosition  = layersOnTopBaseZPosition
                 return [layer]
             }
         case .currentPoint:
@@ -119,6 +122,7 @@ extension OMScrollableChart {
 #if DEBUG
                 layer.name = "currentPoint"
 #endif
+                layer.zPosition  = layersOnTopBaseZPosition
                 return [layer]
             }
         default:
@@ -148,6 +152,9 @@ extension OMScrollableChart {
         polylineLayer.shadowOffset  = CGSize(width: 0, height: lineWidth * 2)
         polylineLayer.shadowOpacity = 0.5
         polylineLayer.shadowRadius  = 6.0
+        polylineLayer.anchorPoint   = .zero
+        polylineLayer.lineCap       = .square
+        polylineLayer.lineJoin      = .round
         // Update the frame
         polylineLayer.frame         = contentView.bounds
         return [polylineLayer]
@@ -254,22 +261,21 @@ extension OMScrollableChart {
     }
     fileprivate func addSegmentLayer(_ color: UIColor, _ lineWidth: CGFloat, _ path: UIBezierPath, _ layers: inout [OMGradientShapeClipLayer]) {
         let shapeSegmentLayer = OMGradientShapeClipLayer()
-        shapeSegmentLayer.strokeColor   = color.cgColor
+        shapeSegmentLayer.strokeColor   =  color.cgColor
         
         shapeSegmentLayer.lineWidth     = lineWidth
         shapeSegmentLayer.path          = path.cgPath
         let box = path.bounds
         
         shapeSegmentLayer.position      = box.origin
-        shapeSegmentLayer.fillColor     = color.withAlphaComponent(0.6).cgColor
+        shapeSegmentLayer.fillColor     = color.cgColor
         shapeSegmentLayer.bounds        = box //.insetBy(dx: -(lineWidth), dy: -(lineWidth))
         shapeSegmentLayer.anchorPoint   = .zero
-        shapeSegmentLayer.zPosition     =  40
         shapeSegmentLayer.lineCap       = .square
         shapeSegmentLayer.lineJoin      = .round
         shapeSegmentLayer.opacity       = 1.0
         
-        shapeSegmentLayer.setGlow( with: color)
+//        shapeSegmentLayer.setGlow( with: color)
         
         layers.append(shapeSegmentLayer)
         shapeSegmentLayer.setNeedsLayout()
@@ -393,8 +399,8 @@ extension OMScrollableChart {
         }
         // add the new points
         let newData = data.data + resulLinregress
-        let generator  = scaledPointsGenerator[renderIndex]
-        let newPoints =  generator.makePoints(data: newData, size: size)
+        let generator = scaledPointsGenerator[renderIndex]
+        let newPoints = generator.makePoints(data: newData, size: size)
         return (newPoints, newData)
     }
     

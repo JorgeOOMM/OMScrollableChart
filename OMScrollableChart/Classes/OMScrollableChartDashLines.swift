@@ -15,7 +15,7 @@
 import UIKit
 // MARK: - OMScrollableChartDashLines
 public class OMScrollableChartDashLines {
-    var dashVerticalLineLayers = [CAShapeLayer]()
+    var dashVerticalLineLayers = [CAShapeLayer]() // OMGradientShapeClipLayer??
     var contentView: UIView!
     init(contentView: UIView!) {
         self.contentView = contentView
@@ -62,5 +62,19 @@ public class OMScrollableChartDashLines {
         lineLayer.name = "Rule mark dashline"
         dashVerticalLineLayers.append(lineLayer)
         contentView.layer.addSublayer(lineLayer)
+    }
+    
+    ///
+    /// animate Line Phase
+    ///
+    func animateLinePhase() {
+        for layer in dashVerticalLineLayers {
+            let animation = CABasicAnimation(keyPath: "lineDashPhase")
+            animation.fromValue = 0
+            animation.toValue = layer.lineDashPattern?.reduce(0) { $0 - $1.intValue } ?? 0
+            animation.duration = 1
+            animation.repeatCount = .infinity
+            layer.add(animation, forKey: "line")
+        }
     }
 }

@@ -1,4 +1,4 @@
-// Copyright 2018 Jorge Ouahbi
+// Copyright 2024 Jorge Ouahbi
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,62 +11,50 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-
-
 import UIKit
-
-
+import GUILib
+// MARK: - RuleDelegateProtocol
 public class OMScrollableChartRuleFlow: RuleDelegateProtocol {
     public func footerSectionDidTouchUpInsideMove(section: CGFloat, selectedView: UIView?, location: CGPoint) {
-        print("[FLOW] footerSectionDidTouchUpInsideMove", section)
+        Log.v("footerSectionDidTouchUpInsideMove", section)
     }
-    
     public func deviceRotation() {
-        print("[FLOW] deviceRotation")
+        Log.v("deviceRotation")
     }
-    
     public func footerSectionDidTouchUpInside(section: CGFloat, selectedView: UIView?) {
-        print("[FLOW] footerSectionDidTouchUpInside", section)
+        Log.v("footerSectionDidTouchUpInside", section)
     }
-    
     public func footerSectionDidTouchUpInsideRelease(section: CGFloat, selectedView: UIView?) {
-        print("[FLOW] footerSectionDidTouchUpInsideRelease", section)
+        Log.v("footerSectionDidTouchUpInsideRelease", section)
     }
-    
     public func updateRenderLayers(index: Int, with layers: [CALayer]) {
-        print("[FLOW] updateRenderLayers", Renders(rawValue: index)!, layers.count)
+        Log.v("updateRenderLayers", Renders(rawValue: index)!, layers.count)
     }
     public func updateRenderData(index: Int, data: Data?) {
-        print("[FLOW] updateRenderData", Renders(rawValue: index)!, data ?? "")
+        Log.v("updateRenderData", Renders(rawValue: index)!, data ?? "")
     }
-    
     public func renderDataTypeChanged(in dataOfRender: RenderType, for index: Int) {
-        print("[FLOW] renderDataTypeChanged", dataOfRender, Renders(rawValue: index)!)
+        Log.v("renderDataTypeChanged", dataOfRender, Renders(rawValue: index)!)
     }
     public func regeneratingRendersLayers() {
-        print("[FLOW] regeneratingRendersLayers")
+        Log.v("regeneratingRendersLayers")
     }
     public func drawRootRuleText(in frame: CGRect, text: NSAttributedString) {
-        print("[FLOW] drawRootRuleText", frame)
+        Log.v("drawRootRuleText", frame)
     }
     public func footerSectionsTextChanged(texts: [String]) {
-        print("[FLOW] footerSectionsTextChanged", texts)
+        Log.v("footerSectionsTextChanged", texts)
     }
-    
     public func numberOfPagesChanged(pages: CGFloat) {
-        print("[FLOW] numberOfPagesChanged", pages)
+        Log.v("numberOfPagesChanged", pages)
     }
-    
     public func contentSizeChanged(contentSize: CGSize) {
-        print("[FLOW] contentSizeChanged", contentSize)
+        Log.v("contentSizeChanged", contentSize)
     }
-    
     public func frameChanged(frame: CGRect) {
-        print("[FLOW] frameChanged", frame)
+        print("frameChanged", frame)
     }
-    
     public func dataPointsChanged(dataPoints: [Float], for index: Int) {
-        print("[FLOW] dataPointsChanged", Renders(rawValue: index)!)
+        print("dataPointsChanged", Renders(rawValue: index) ?? "")
     }
 }

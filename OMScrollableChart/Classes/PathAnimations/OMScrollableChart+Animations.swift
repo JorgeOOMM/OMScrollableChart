@@ -86,7 +86,7 @@ extension OMScrollableChart {
         })
     }
     func runRideProgress(layerToRide: CALayer?, renderIndex: Int, scrollAnimation: Bool = false) {
-        if let anim = self.rideAnim {
+        if let anim = self.ridePathAnimation {
             if let layerRide = layerToRide {
                 CATransaction.withDisabledActions {
                     layerRide.transform = CATransform3DIdentity
@@ -192,7 +192,7 @@ extension OMScrollableChart {
     }
     
     func updateRenderPointsOpacity( _ toValue: CGFloat = 0, _ duration: TimeInterval = 4.0) {
-        guard allRendersLayers.isEmpty == false else {
+        guard renderLayers[Renders.points.rawValue].isEmpty == false else {
             return
         }
         CATransaction.begin()
