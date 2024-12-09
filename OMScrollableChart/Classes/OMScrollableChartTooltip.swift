@@ -23,7 +23,6 @@ import UIKit
 
 public protocol TooltipProtocol {
     var string: String? {get set}
-//    var frame: CGRect  {get }
     func displayTooltip(_ position: CGPoint, duration: TimeInterval)
     func moveTooltip(_ position: CGPoint, duration: TimeInterval)
     func hideTooltip(_ position: CGPoint, duration: TimeInterval)
@@ -51,32 +50,14 @@ public struct OMScrollableChartTooltip: TooltipProtocol {
     public func hideTooltip(_ position: CGPoint, duration: TimeInterval = 4.0) {
         self.bubbleView.hideTooltip(position, duration: duration)
     }
-//    public var frame: CGRect {
-//
-//        // Calculate the biggest size that fits in the given CGSize
-//        let newSize = self.bubbleView.sizeThatFits(CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude))
-//
-//        // Set the textView's size to be whatever is bigger: The fitted width or the fixedWidth
-//        let size = CGSize(width: max(newSize.width, fixedWidth), height: newSize.height)
-//
-//        
-//        let ratio: CGFloat = (1.0 / 8.0) * 0.5
-//        let superHeight = chart.superview?.frame.height ?? 1
-//        let estimatedTooltipHeight = superHeight * ratio
-//        return CGRect(x: 0,
-//                      y: 0,
-//                      width: 128,
-//                      height: estimatedTooltipHeight > 0 ? estimatedTooltipHeight : 37.0)
-//    }
-
     mutating public func configure() {
-        self.bubbleView.frame = .zero
-        self.bubbleView.alpha = chart.tooltipAlpha
-        self.bubbleView.font  = chart.tooltipFont
-        self.bubbleView.textAlignment = .center
+        self.bubbleView.alpha           = chart.tooltipAlpha
+        self.bubbleView.backgroundColor = chart.toolTipBackgroundColor
+        self.bubbleView.font            = chart.tooltipFont
+        self.bubbleView.textAlignment   = .center
+        // Layer
         self.bubbleView.layer.cornerRadius = 6
         self.bubbleView.layer.masksToBounds = true
-        self.bubbleView.backgroundColor = chart.toolTipBackgroundColor
         self.bubbleView.layer.borderColor = chart.tooltipBorderColor
         self.bubbleView.layer.borderWidth = chart.tooltipBorderWidth
         // Shadow

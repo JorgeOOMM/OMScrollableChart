@@ -89,6 +89,10 @@ extension OMScrollableChart: TouchesProtocol {
         let segmentLayer = renderLayers[Renders.segments.rawValue][nearest.offset]
         self.selectRenderLayer(segmentLayer, renderIndex: Renders.segments.rawValue)
         self.selectedSegmentRenderLayer = segmentLayer
+        
+        self.selectRenderLayerWithAnimation(layer,
+                                            selectedPoint: location,
+                                            renderIndex: Renders.points.rawValue)
     }
     
     ///

@@ -42,7 +42,7 @@ public class OMBubbleTextView: OMBubbleShapeView, TooltipleableView {
             setNeedsDisplay()
         }
     }
-    @IBInspectable var boundInOneLine: Bool = false {
+    @IBInspectable var boundInOneLine: Bool = true {
         didSet {
             sizeToFit()
             setNeedsDisplay()
