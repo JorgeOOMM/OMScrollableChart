@@ -34,18 +34,19 @@ import GUILib
  segmento de seccion
  */
 
+
 extension UIColor {
     var colorMap: [UIColor] {
-        return [self.darkerColor(percent: 0.0),
-                self.darkerColor(percent: 0.1),
-                self.darkerColor(percent: 0.2),
-                self.darkerColor(percent: 0.3),
-                self.darkerColor(percent: 0.4),
-                self.lighterColor(percent: 0.4),
-                self.lighterColor(percent: 0.3),
-                self.lighterColor(percent: 0.2),
+        return [self.lighterColor(percent: 0.0),
                 self.lighterColor(percent: 0.1),
-                self.lighterColor(percent: 0.0)]
+                self.lighterColor(percent: 0.2),
+                self.lighterColor(percent: 0.3),
+                self.lighterColor(percent: 0.4),
+                self.darkerColor(percent: 0.4),
+                self.darkerColor(percent: 0.3),
+                self.darkerColor(percent: 0.2),
+                self.darkerColor(percent: 0.1),
+                self.darkerColor(percent: 0.0)]
     }
 }
 
@@ -73,15 +74,22 @@ extension OMScrollableChart {
             var colors = color.colorMap
             if let data = data, let maximun = data.max(), let minimun = data.min() {
                 let map = color.colorMap
+                let lengthOfMap = Double(map.count - 1)
                 colors = data.compactMap {
                     let result = linlin(val: Double($0),
                                         inMin: Double(minimun),
                                         inMax: Double(maximun),
                                         outMin: 0,
-                                        outMax: Double(map.count - 1))
-                    return map[lrintl(result)]
+                                        outMax: lengthOfMap)
+                    return map[lrintl(result)].withAlphaComponent(result / lengthOfMap)
                 }
             }
+//            let colors: [UIColor] = [UIColor.greyishBlue.adjust(by: 0.7).withAlphaComponent(0.41),
+//                                     UIColor.greyishBlue.adjust(by: 0.5).withAlphaComponent(0.74),
+//                                     UIColor.greyishBlue.adjust(by: 0.4).withAlphaComponent(0.61),
+//                                     UIColor.greyishBlue.adjust(by: 0.5).withAlphaComponent(0.71),
+//                                     UIColor.greyishBlue.adjust(by: 0.7).withAlphaComponent(0.41)]
+
             let layers = createSegmentLayers(subPaths,
                                              ScrollChartTheme.segmentLineWidth,
                                              colors)
@@ -228,7 +236,6 @@ extension OMScrollableChart {
 
         var layers =  [OMGradientShapeClipLayer]()
         for currentPointIndex in 0..<points.count - 1 {
-            
             let width = abs(points[currentPointIndex].x - points[currentPointIndex+1].x)
             let height =  contentView.frame.maxY - points[currentPointIndex].y
             let widthDivisor = width / CGFloat(count)
@@ -259,16 +266,17 @@ extension OMScrollableChart {
         }
         return layers
     }
-    fileprivate func addSegmentLayer(_ color: UIColor, _ lineWidth: CGFloat, _ path: UIBezierPath, _ layers: inout [OMGradientShapeClipLayer]) {
+    fileprivate func addSegmentLayer(_ color: UIColor, _ lineWidth: CGFloat, _ path: UIBezierPath) -> OMGradientShapeClipLayer {
         let shapeSegmentLayer = OMGradientShapeClipLayer()
-        shapeSegmentLayer.strokeColor   =  color.cgColor
-        
+//        shapeSegmentLayer.strokeColor   = color.cgColor
+        shapeSegmentLayer.strokeColor   = color.withAlphaComponent(0.8).cgColor
         shapeSegmentLayer.lineWidth     = lineWidth
         shapeSegmentLayer.path          = path.cgPath
         let box = path.bounds
         
         shapeSegmentLayer.position      = box.origin
-        shapeSegmentLayer.fillColor     = color.cgColor
+        shapeSegmentLayer.fillColor     = color.darker.withAlphaComponent(0.12).cgColor
+//        shapeSegmentLayer.fillColor     = color.cgColor
         shapeSegmentLayer.bounds        = box //.insetBy(dx: -(lineWidth), dy: -(lineWidth))
         shapeSegmentLayer.anchorPoint   = .zero
         shapeSegmentLayer.lineCap       = .square
@@ -276,11 +284,10 @@ extension OMScrollableChart {
         shapeSegmentLayer.opacity       = 1.0
         
 //        shapeSegmentLayer.setGlow( with: color)
-        
-        layers.append(shapeSegmentLayer)
         shapeSegmentLayer.setNeedsLayout()
+        
+        return shapeSegmentLayer
     }
-    
     ///
     /// createSegmentLayers
     ///
@@ -288,73 +295,73 @@ extension OMScrollableChart {
     ///   - segmentsPaths: [UIBezierPath]
     ///   - lineWidth: lineWidth
     ///   - color: UIColor
-    ///   - strokeColor: UIColor
-    /// - Returns: [GlowPathLayer]
+    /// - Returns: [OMGradientShapeClipLayer]
     ///
     ///
     func createSegmentLayers(_ segmentsPaths: [UIBezierPath],
-                             _ lineWidth: CGFloat = 0.5,
-                             _ colors: [UIColor] = [.white, .red]) -> [OMGradientShapeClipLayer] {
+                             _ lineWidth: CGFloat,
+                             _ colors: [UIColor]) -> [OMGradientShapeClipLayer] {
         var layers = [OMGradientShapeClipLayer]()
         for (idx, path) in segmentsPaths.enumerated() {
-            let color = colors[idx]
-            addSegmentLayer(color, lineWidth, path, &layers)
+            let color = colors[idx % colors.count]
+            let shapeSegmentLayer = addSegmentLayer(color, lineWidth, path)
+            layers.append(shapeSegmentLayer)
         }
         return layers
     }
 }
-
 //
 // Query the data layers to the delegate
 //
 extension OMScrollableChart {
         
     func makeSimplified(_ data: [Float], _ renderIndex: Int, _ boundsSize: CGSize, _ dataSource: DataSourceProtocol) {
-        guard let renderDelegate = renderDelegate else {
+        guard let renderDelegate = renderDelegate,let pointsGenerator = self.pointsGeneratorModel else {
             return
         }
-        let discretePoints = rawPoints(data, size: boundsSize)
+        
+        let discretePoints = pointsGenerator.rawPoints(data, size: boundsSize)
         
         if discretePoints.count > 0 {
             let chartData = (discretePoints, data)
-            if let approximationPoints =  simplifiedPoints( points: discretePoints,
-                                                                tolerance: simplifiedTolerance) {
-                if approximationPoints.count > 0 {
-                    self.approximationData.insert(chartData, at: renderIndex)
-                    self.pointsRender.insert(approximationPoints, at: renderIndex)
-                    var layers = renderDelegate.dataLayers(chart: self,
-                                                       renderIndex: renderIndex,
-                                                       section: 0, points: approximationPoints)
-                    // accumulate layers
-                    if layers.isEmpty {
-                        layers = renderDefaultLayers(renderIndex,
-                                                     points: approximationPoints,
-                                                     data: data)
-                    }
-                    
-                    self.renderLayers.insert(layers, at: renderIndex)
+            let approximationPoints =  pointsGenerator.simplifiedPoints( points: discretePoints,
+                                                                tolerance: simplifiedTolerance)
+            if approximationPoints.count > 0 {
+                self.approximationData.insert(chartData, at: renderIndex)
+                self.pointsRender.insert(approximationPoints, at: renderIndex)
+                var layers = renderDelegate.dataLayers(chart: self,
+                                                   renderIndex: renderIndex,
+                                                   section: 0, points: approximationPoints)
+                // accumulate layers
+                if layers.isEmpty {
+                    layers = renderDefaultLayers(renderIndex,
+                                                 points: approximationPoints,
+                                                 data: data)
                 }
+                
+                self.renderLayers.insert(layers, at: renderIndex)
             }
         }
     }
     
     func makeAverage(_ data: [Float], _ renderIndex: Int,_ boundsSize: CGSize, _ dataSource: DataSourceProtocol) {
-        guard let renderDelegate = renderDelegate else {
+        guard let renderDelegate = renderDelegate, let pointsGenerator = self.pointsGeneratorModel else {
             return
         }
-        if let points = averagedPoints(data: data,
-                                           size: boundsSize,
-                                           elementsToAverage: self.numberOfElementsToAverage) {
-            let chartData = (points, data)
+        let averagePoints = pointsGenerator.averagedPoints(data: data,
+                                                    size: boundsSize,
+                                                    elementsToAverage: self.numberOfElementsToAverage)
+        if averagePoints.count > 0 {
+            let chartData = (averagePoints, data)
             self.averagedData.insert(chartData, at: renderIndex)
-            self.pointsRender.insert(points, at: renderIndex)
+            self.pointsRender.insert(averagePoints, at: renderIndex)
             var layers = renderDelegate.dataLayers(chart: self,
-                                               renderIndex: renderIndex,
-                                               section: 0,
-                                               points: points)
+                                                   renderIndex: renderIndex,
+                                                   section: 0,
+                                                   points: averagePoints)
             // accumulate layers
             if layers.isEmpty {
-                layers = renderDefaultLayers(renderIndex, points: points, data: data)
+                layers = renderDefaultLayers(renderIndex, points: averagePoints, data: data)
             }
             // accumulate layers
             self.renderLayers.insert(layers, at: renderIndex)
@@ -364,10 +371,10 @@ extension OMScrollableChart {
     func makeDiscrete(_ data: [Float],
                       _ renderIndex: Int,
                       _ boundsSize: CGSize, _ dataSource: DataSourceProtocol) {
-        guard let renderDelegate = renderDelegate else {
+        guard let renderDelegate = renderDelegate, let pointsGenerator = self.pointsGeneratorModel else {
             return
         }
-        let points = rawPoints(data, size: boundsSize)
+        let points = pointsGenerator.rawPoints(data, size: boundsSize)
         if points.count > 0 {
             let chartData = (points, data)
             self.discreteData.insert(chartData, at: renderIndex)
@@ -399,19 +406,18 @@ extension OMScrollableChart {
         }
         // add the new points
         let newData = data.data + resulLinregress
-        let generator = scaledPointsGenerator[renderIndex]
-        let newPoints = generator.makePoints(data: newData, size: size)
-        return (newPoints, newData)
+        let newPoints = self.pointsGeneratorModel?.pointScaler.makePoints(data: newData, size: size)
+        return (newPoints ?? [], newData)
     }
     
     private func makeLinregress(_ data: [Float],
                                 _ renderIndex: Int,
                                 _ boundsSize: CGSize,
                                 _ dataSource: DataSourceProtocol) {
-        guard let renderDelegate = renderDelegate else {
+        guard let renderDelegate = renderDelegate, let pointsGenerator = self.pointsGeneratorModel else {
             return
         }
-        let points = rawPoints(data, size: boundsSize)
+        let points = pointsGenerator.rawPoints(data, size: boundsSize)
         if points.count > 0 {
             let chartData = (points, data)
             let linregressData = linregressPoints(data: chartData,

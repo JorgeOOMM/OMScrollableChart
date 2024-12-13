@@ -14,15 +14,17 @@
 
 import UIKit
 
-public protocol TooltipleableView where Self: UIView {
+// MARK: - TooltipleableView
+public protocol TooltipleableProtocol {
     func moveTooltip(_ position: CGPoint, duration: TimeInterval)
     func displayTooltip(_ position: CGPoint, duration: TimeInterval)
     func hideTooltip(_ position: CGPoint, duration: TimeInterval)
+    var string: String? {get set}
 }
 
 // MARK: - OMBubbleTextView -
 @IBDesignable
-public class OMBubbleTextView: OMBubbleShapeView, TooltipleableView {
+public class OMBubbleTextView: OMBubbleShapeView, TooltipleableProtocol {
     //  text alignment.b j
     @IBInspectable var textAlignment: NSTextAlignment = .center {
         didSet {setNeedsDisplay()}
@@ -36,7 +38,7 @@ public class OMBubbleTextView: OMBubbleShapeView, TooltipleableView {
         didSet {setNeedsDisplay()}
     }
     // text
-    @IBInspectable var string: String? {
+    @IBInspectable public var string: String? {
         didSet {
             sizeToFit()
             setNeedsDisplay()
@@ -49,18 +51,6 @@ public class OMBubbleTextView: OMBubbleShapeView, TooltipleableView {
         }
     }
     private var boundingSize: CGSize = .zero
-    /// Called when a designable object is created in Interface Builder.
-    public override func prepareForInterfaceBuilder() {
-        super.prepareForInterfaceBuilder()
-        
-        self.string = """
-        
-        The problem is that you are not resizing the layer when the size of the view changes, thus it remains at it's initial value, which mostly depends on how was the view created.
-        
-        I'd recommend using an UIView subclass, and updating the layer size in the layoutSubviews method, which always gets called when the view resizes:
-        
-        """
-    }
     private var attributtedString: NSAttributedString? {
         if let text = string {
             let paragraphStyle = NSMutableParagraphStyle()

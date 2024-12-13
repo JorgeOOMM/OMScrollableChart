@@ -80,16 +80,16 @@ extension OMScrollableChart {
     
     /// Calculate the rules marks positions
     
-    func internalCalcRules(generator: ScaledPointsGeneratorProtocol) {
+    func internalCalcRules(pointScaler: PointScalerGeneratorProtocol) {
         // Get the polyline generator
         // + 2 is the limit up and the limit down
         let numberOfAllRuleMarks = Int(numberOfRuleMarks) + 2 - 1
-        let roundedStep = generator.range / Float(numberOfAllRuleMarks)
+        let roundedStep = pointScaler.range / Float(numberOfAllRuleMarks)
         for ruleMarkIndex in 0 ..< numberOfAllRuleMarks {
-            let value = generator.minimumValue + Float(roundedStep) * Float(ruleMarkIndex)
+            let value = pointScaler.minimumValue + Float(roundedStep) * Float(ruleMarkIndex)
             appendRuleMark(value)
         }
-        appendRuleMark(generator.maximumValue)
+        appendRuleMark(pointScaler.maximumValue)
     }
     
     
@@ -115,12 +115,14 @@ extension OMScrollableChart {
     }
     
     func makeRulesPoints() -> Bool {
-        let generator = scaledPointsGenerator[Renders.polyline.rawValue]
-        guard numberOfRuleMarks > 0,generator.range != 0 else { return false }
+        guard let pointScaler = self.pointsGeneratorModel?.pointScaler else {
+            return false
+        }
+        guard numberOfRuleMarks > 0, pointScaler.range != 0 else { return false }
         rules.rulesMarks.removeAll()
-        internalCalcRules(generator: generator)
-        rules.rulesPoints = generator.makePoints(data: rulesMarks,
-                                                 size: drawableFrame.size)
+        internalCalcRules(pointScaler: pointScaler)
+        rules.rulesPoints = pointScaler.makePoints(data: rulesMarks,
+                                                             size: drawableFrame.size)
         return true
     }
     

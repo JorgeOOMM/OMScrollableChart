@@ -71,7 +71,6 @@ public enum AnimationTiming: Hashable {
 
 protocol DataSourceProtocol: AnyObject {
     func dataPoints(chart: OMScrollableChart, renderIndex: Int, section: Int) -> [Float]
-    func numberOfPages(chart: OMScrollableChart) -> CGFloat
     func footerSectionsText(chart: OMScrollableChart) -> [String]?
     func dataPointTootipText(chart: OMScrollableChart, renderIndex: Int, dataIndex: Int, section: Int) -> String?
     func dataOfRender(chart: OMScrollableChart, renderIndex: Int) -> RenderType

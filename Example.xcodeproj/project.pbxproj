@@ -14,6 +14,7 @@
 		0456CB1A2D0073B8003384B3 /* OMScrollableChart+Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0456CB192D0073B8003384B3 /* OMScrollableChart+Animations.swift */; };
 		0456CB1C2D00757E003384B3 /* OMScrollableChart+RenderLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0456CB1B2D00757D003384B3 /* OMScrollableChart+RenderLocation.swift */; };
 		0456CB1E2D00A6D6003384B3 /* OMScrollableChart+Touches.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0456CB1D2D00A6D6003384B3 /* OMScrollableChart+Touches.swift */; };
+		047DB4ED2D0901AB0022902C /* PointsGeneratorModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047DB4EC2D0901AB0022902C /* PointsGeneratorModel.swift */; };
 		04B124D62CFE105700E49914 /* OMScrollableChartRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04B124D52CFE105700E49914 /* OMScrollableChartRules.swift */; };
 		04B124D82CFE108800E49914 /* OMScrollableChartDashLines.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04B124D72CFE108800E49914 /* OMScrollableChartDashLines.swift */; };
 		04B124DA2CFE10C300E49914 /* OMScrollableChart+Protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04B124D92CFE10C300E49914 /* OMScrollableChart+Protocols.swift */; };
@@ -65,6 +66,7 @@
 		0456CB192D0073B8003384B3 /* OMScrollableChart+Animations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OMScrollableChart+Animations.swift"; sourceTree = "<group>"; };
 		0456CB1B2D00757D003384B3 /* OMScrollableChart+RenderLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OMScrollableChart+RenderLocation.swift"; sourceTree = "<group>"; };
 		0456CB1D2D00A6D6003384B3 /* OMScrollableChart+Touches.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OMScrollableChart+Touches.swift"; sourceTree = "<group>"; };
+		047DB4EC2D0901AB0022902C /* PointsGeneratorModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PointsGeneratorModel.swift; sourceTree = "<group>"; };
 		04B124D52CFE105700E49914 /* OMScrollableChartRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OMScrollableChartRules.swift; sourceTree = "<group>"; };
 		04B124D72CFE108800E49914 /* OMScrollableChartDashLines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OMScrollableChartDashLines.swift; sourceTree = "<group>"; };
 		04B124D92CFE10C300E49914 /* OMScrollableChart+Protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OMScrollableChart+Protocols.swift"; sourceTree = "<group>"; };
@@ -199,6 +201,7 @@
 				D161A520254B9F2E00DDE361 /* PathAnimations */,
 				7D0FC23D253A7C0900F3538E /* Layers */,
 				04B124D92CFE10C300E49914 /* OMScrollableChart+Protocols.swift */,
+				047DB4EC2D0901AB0022902C /* PointsGeneratorModel.swift */,
 				D13C9C8B24FB459B00498B01 /* OMScrollableChart.swift */,
 				04F0B06C2D05257A000161CD /* OMScrollableChart+Renderable.swift */,
 				D13C9C7424FB459A00498B01 /* OMScrollableChart+Renders.swift */,
@@ -401,6 +404,7 @@
 				D13C9CA424FB459B00498B01 /* OMScrollableChart.swift in Sources */,
 				7D0FC23A253A7B5500F3538E /* OMShapeLayerLinearGradientClipPath.swift in Sources */,
 				0456CB082CFE22D8003384B3 /* RuleProtocol.swift in Sources */,
+				047DB4ED2D0901AB0022902C /* PointsGeneratorModel.swift in Sources */,
 				0456CB1E2D00A6D6003384B3 /* OMScrollableChart+Touches.swift in Sources */,
 				0456CB102CFE29C9003384B3 /* OMScrollableChartRuleFlow.swift in Sources */,
 				D13C9CA624FB459B00498B01 /* OMScrollableChartTooltip.swift in Sources */,
@@ -599,7 +603,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.dsp.scrollableChart.example;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "OMScrollableChart/Example-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -621,7 +624,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.dsp.scrollableChart.example;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "OMScrollableChart/Example-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

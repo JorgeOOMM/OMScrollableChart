@@ -16,20 +16,12 @@
 //  OMScrollableChartTooltip
 //
 //  Created by Jorge Ouahbi on 16/08/2024.
+//
+//
 
 import UIKit
 
-// MARK: TooltipProtocol
-
-public protocol TooltipProtocol {
-    var string: String? {get set}
-    func displayTooltip(_ position: CGPoint, duration: TimeInterval)
-    func moveTooltip(_ position: CGPoint, duration: TimeInterval)
-    func hideTooltip(_ position: CGPoint, duration: TimeInterval)
-    mutating func configure()
-}
-
-public struct OMScrollableChartTooltip: TooltipProtocol {
+public struct OMScrollableChartTooltip: TooltipleableProtocol {
     private var chart: OMScrollableChart!
     private var bubbleView: OMBubbleTextView = OMBubbleTextView()
     init(chart: OMScrollableChart!) {

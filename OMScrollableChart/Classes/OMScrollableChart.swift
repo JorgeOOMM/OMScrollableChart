@@ -49,7 +49,7 @@ struct ScrollChartAnimationKeys {
     
 }
 struct ScrollChartConfiguration {
-    
+    static let maxNumberOfRegressionPoints: Int = 10
     static let scrollingProgressDuration: TimeInterval = 1.2
     static let maxNumberOfRenders: Int = 10
 }
@@ -62,11 +62,9 @@ struct ScrollChartTheme {
     static let currentPointSize: CGSize = CGSize(width: 11, height: 11)
     static let currentPointColor: UIColor = UIColor.greyishBlue
     static let polylineColor: UIColor = UIColor.darkGreyBlueTwo
-    static let polylineLineWidth: CGFloat = 8
+    static let polylineLineWidth: CGFloat = 4
     static let segmentsColor: UIColor = UIColor.greyishBlue
-    static let segmentLineWidth: CGFloat  = 4
-
-    
+    static let segmentLineWidth: CGFloat  = polylineLineWidth * 2
 }
 
 @objcMembers
@@ -116,11 +114,13 @@ public class OMScrollableChart: UIScrollView, ChartProtocol, CAAnimationDelegate
     
     // MARK: - Tooltip -
 
-    var scaledPointsGenerator =
-    [InlineScaledPointsGenerator](repeating: InlineScaledPointsGenerator([], 
-                                                                         size: .zero,
-                                                                         insets: UIEdgeInsets(top: 0, left: 0,bottom: 0,right: 0)),
-                                                                         count: ScrollChartConfiguration.maxNumberOfRenders)
+//    var scaledPointsGenerator =
+//    [InlineScaledPointsGenerator](repeating: InlineScaledPointsGenerator([], 
+//                                                                         size: .zero,
+//                                                                         insets: UIEdgeInsets(top: 0, left: 0,bottom: 0,right: 0)),
+//                                                                         count: ScrollChartConfiguration.maxNumberOfRenders)
+    
+    var pointsGeneratorModel: PointsGeneratorModelProtocol?
     var polylineGradientFadePercentage: CGFloat = 0.4
     var drawPolylineGradient: Bool =  true
     var lineColor = UIColor.greyishBlue
@@ -351,6 +351,10 @@ public class OMScrollableChart: UIScrollView, ChartProtocol, CAAnimationDelegate
     }
     // Setup all the view/subviews
     func onMoveToSuperview() {
+        
+        let scaledPoints = ScaledPointsGenerator()
+        self.pointsGeneratorModel = PointsGeneratorModel(pointScaler: scaledPoints)
+        
         self.renderDelegate = self
         self.renderSource   = self
         self.clearsContextBeforeDrawing = true
@@ -389,8 +393,8 @@ public class OMScrollableChart: UIScrollView, ChartProtocol, CAAnimationDelegate
                                        height: contentSizeHeight())
             
             flowDelegate?.contentSizeChanged(contentSize: newValue)
+            updateLayout()
         }
-        updateLayout()
     }
     ///
     /// Update the chart  data source for the render points for each render
@@ -418,7 +422,6 @@ public class OMScrollableChart: UIScrollView, ChartProtocol, CAAnimationDelegate
                 }
                 if dataForPointsUpdate {
                     // Store the data for points and notify it
-                    self.scaledPointsGenerator[index].data = dataForPoints
                     self.renderDataPoints.insert(dataForPoints, at: index)
                     self.flowDelegate?.dataPointsChanged(dataPoints: dataForPoints, for: index)
                 }
@@ -448,12 +451,13 @@ public class OMScrollableChart: UIScrollView, ChartProtocol, CAAnimationDelegate
     /// - Returns: Bool
     ///
     func updateNumberOfPages() -> Bool {
-        guard let dataSource = self.dataSource else {
-            Log.e("Not data source found.")
+        let oldNumberOfPages = numberOfPages
+        guard let numberOfPoints = self.renderDataPoints.map({$0.count}).max() else {
             return false
         }
-        let oldNumberOfPages = numberOfPages
-        let newNumberOfPages = dataSource.numberOfPages(chart: self)
+        // Add the maximun allowed regression points to the max nu,ber of render points
+        let maximunNumberOfPoints = CGFloat(numberOfPoints + ScrollChartConfiguration.maxNumberOfRegressionPoints)
+        let newNumberOfPages = maximunNumberOfPoints / CGFloat(self.numberOfSectionsPerPage)
         if oldNumberOfPages != newNumberOfPages {
             Log.v("numberOfPages was changed: \(oldNumberOfPages) -> \(newNumberOfPages)")
             self.numberOfPages = newNumberOfPages
@@ -475,35 +479,6 @@ public class OMScrollableChart: UIScrollView, ChartProtocol, CAAnimationDelegate
         // update teh number of pages.
         let numberOfPagesChanged = updateNumberOfPages()
         return numberOfPagesChanged
-    }
-}
-// MARK: - Points generator
-extension OMScrollableChart {
-    func rawPoints(_ data: [Float], size: CGSize) -> [CGPoint] {
-        let generator = self.scaledPointsGenerator[Renders.polyline.rawValue]
-        generator.updateRangeLimits(data)
-        return generator.makePoints(data: data, size: size)
-    }
-    func averagedPoints( data: [Float], size: CGSize, elementsToAverage: Int) -> [CGPoint]? {
-        guard let generator = scaledPointsGenerator.first else {
-            return nil
-        }
-        if elementsToAverage > 0 {
-            var result: Float = 0
-            let chunked = data.chunked(into: elementsToAverage)
-            let averagedData: [Float] = chunked.map {
-                vDSP_meanv($0, 1, &result, vDSP_Length($0.count));
-                return result
-            }
-            return generator.makePoints(data: averagedData, size: size)
-        }
-        return nil
-    }
-    func simplifiedPoints( points: [CGPoint], tolerance: CGFloat) -> [CGPoint]? {
-        guard tolerance > 0, points.isEmpty == false else {
-            return nil
-        }
-        return  PolylineSimplify.simplify(points, tolerance: Float(tolerance))
     }
 }
 
@@ -693,11 +668,8 @@ extension OMScrollableChart {
         guard allDataPointsRender.count > 0 else {
             return
         }
-        Log.w("\(CALayer.isAnimatingLayers) animations running.")
-        if CALayer.isAnimatingLayers <= 1 {
-            // Create the points from the discrete data using the renders
-            regenerateLayerTree()
-        }
+        // Create the points from the discrete data using the renders
+        regenerateLayerTree()
     }
     ///
     /// Create the subviews layout chart for the current frame
