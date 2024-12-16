@@ -26,71 +26,71 @@ var animationTimingTable: [AnimationTiming] = [
 ]
 
 extension OMScrollableChart: RenderableDelegateProtocol, RenderableProtocol {
-    func animateLayers(chart: OMScrollableChart,
-                       renderIndex: Int,
-                       layerIndex: Int,
-                       layer: OMGradientShapeClipLayer) -> CAAnimation? {
-        switch Renders(rawValue: renderIndex) {
-        case .points, .selectedPoint, .currentPoint, .segments:
-            return nil
-        case .polyline:
-            guard let polylinePath = chart.polylinePath,
-                    let layerToRide = chart.renderSelectedPointsLayer else {
-                return nil
-            }
-            // Ride the selected point along the polyline path
-            return chart.animateLayerPathRideToPoint( polylinePath,
-                                                      layerToRide: layerToRide,
-                                                      pointIndex: chart.numberOfSections,
-                                                      duration: 10)
-            
-        case .bar1:
-            let pathStart = pathsToAnimate[renderIndex - 3][layerIndex]
-            return chart.animateLayerPath( layer,
-                                           pathStart: pathStart,
-                                           pathEnd: UIBezierPath( cgPath: layer.path!))
-        case .bar2:
-            let pathStart = pathsToAnimate[renderIndex - 3][layerIndex]
-            return chart.animateLayerPath( layer,
-                                           pathStart: pathStart,
-                                           pathEnd: UIBezierPath( cgPath: layer.path!) )
-            
-        default:
-            return nil
-        }
-    }
+//    func animateLayers(chart: OMScrollableChart,
+//                       renderIndex: Int,
+//                       layerIndex: Int,
+//                       layer: OMGradientShapeClipLayer) -> CAAnimation? {
+//        switch Renders(rawValue: renderIndex) {
+//        case .points, .selectedPoint, .currentPoint, .segments:
+//            return nil
+//        case .polyline:
+//            guard let polylinePath = chart.polylinePath,
+//                    let layerToRide = chart.renderSelectedPointsLayer else {
+//                return nil
+//            }
+//            // Ride the selected point along the polyline path
+//            return chart.animateLayerPathRideToPoint( polylinePath,
+//                                                      layerToRide: layerToRide,
+//                                                      pointIndex: chart.numberOfSections,
+//                                                      duration: 10)
+//            
+//        case .bar1:
+//            let pathStart = pathsToAnimate[renderIndex - 3][layerIndex]
+//            return chart.animateLayerPath( layer,
+//                                           pathStart: pathStart,
+//                                           pathEnd: UIBezierPath( cgPath: layer.path!))
+//        case .bar2:
+//            let pathStart = pathsToAnimate[renderIndex - 3][layerIndex]
+//            return chart.animateLayerPath( layer,
+//                                           pathStart: pathStart,
+//                                           pathEnd: UIBezierPath( cgPath: layer.path!) )
+//            
+//        default:
+//            return nil
+//        }
+//    }
     var numberOfRenders: Int {
         return RendersBase
     }
-    func dataLayers(chart: OMScrollableChart, renderIndex: Int, section: Int, points: [CGPoint]) -> [OMGradientShapeClipLayer] {
-        switch Renders(rawValue:  renderIndex) {
-        case .bar1:
-            let layers =  chart.createRectangleLayers(points, columnIndex: 1, count: 6,
-                                                      color: .black)
-#if DEBUG
-            layers.forEach({$0.name = "bar income"})  //debug
-#endif
-            self.pathsToAnimate.insert(
-                chart.createInverseRectanglePaths(points, columnIndex: 1, count: 6),
-                at: 0)
-            return layers
-        case .bar2:
-            
-            let layers =  chart.createRectangleLayers(points, columnIndex: 4, count: 6,
-                                                      color: .green)
-#if DEBUG
-            layers.forEach({$0.name = "bar outcome"})  //debug
-#endif
-            
-            self.pathsToAnimate.insert(
-                chart.createInverseRectanglePaths(points, columnIndex: 4, count: 6),
-                at: 1)
-            return layers
-            
-        default:
-            return []
-        }
-    }
+//    func dataLayers(chart: OMScrollableChart, renderIndex: Int, section: Int, points: [CGPoint]) -> [OMGradientShapeClipLayer] {
+//        switch Renders(rawValue:  renderIndex) {
+//        case .bar1:
+//            let layers =  chart.createRectangleLayers(points, columnIndex: 1, count: 6,
+//                                                      color: .black)
+//#if DEBUG
+//            layers.forEach({$0.name = "bar income"})  //debug
+//#endif
+//            self.pathsToAnimate.insert(
+//                chart.createInverseRectanglePaths(points, columnIndex: 1, count: 6),
+//                at: 0)
+//            return layers
+//        case .bar2:
+//            
+//            let layers =  chart.createRectangleLayers(points, columnIndex: 4, count: 6,
+//                                                      color: .green)
+//#if DEBUG
+//            layers.forEach({$0.name = "bar outcome"})  //debug
+//#endif
+//            
+//            self.pathsToAnimate.insert(
+//                chart.createInverseRectanglePaths(points, columnIndex: 4, count: 6),
+//                at: 1)
+//            return layers
+//            
+//        default:
+//            return []
+//        }
+//    }
 
     func queryAnimation(chart: OMScrollableChart, renderIndex: Int) -> AnimationTiming {
         return animationTimingTable[renderIndex]
@@ -99,7 +99,7 @@ extension OMScrollableChart: RenderableDelegateProtocol, RenderableProtocol {
     func didSelectDataIndex(chart: OMScrollableChart, renderIndex: Int, dataIndex: Int, layer: CALayer) {
         switch Renders(rawValue: renderIndex) {
         case .polyline:
-            chart.renderSelectedPointsLayer?.position =  layer.position
+            chart.renderLayersAndPoints?.renderLayers[Renders.selectedPoint.rawValue].first?.position =  layer.position
         case .points:
             break
         case .segments:

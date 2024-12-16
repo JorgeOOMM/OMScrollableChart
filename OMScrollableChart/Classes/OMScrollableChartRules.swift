@@ -63,24 +63,21 @@ public struct OMScrollableChartRules {
     /// Create and add rules
     mutating func configure() {
         let rootRule = OMScrollableChartRuleLeading(chart: chart)
-        rootRule.chart = chart
-        rootRule.font = ruleFont
-        rootRule.fontColor = chart.fontRootRuleColor
+        rootRule.font = ScrollChartTheme.ruleFont
+        rootRule.fontColor = UIColor.black
         let footerRule = OMScrollableChartRuleFooter(chart: chart)
-        footerRule.chart = chart
-        footerRule.font = ruleFont
-        footerRule.fontColor = chart.fontFooterRuleColor
+        footerRule.font = ScrollChartTheme.ruleFont
+        footerRule.fontColor = UIColor.darkGreyBlueTwo
         self.rootRule = rootRule
         self.footerRule = footerRule
         rules.append(rootRule)
         rules.append(footerRule)
-        // self.rules.append(topRule)
-        
-        //        if let topRule = topRule {
-        //
-        //        }
     }
-
+    
+    /// configure Rules
+    ///
+    /// - Parameter contentView: UIView container
+    ///
     mutating func configureRules( using contentView: UIView) {
         addLeadingRuleIfNeeded(rootRule, contentView: contentView, view: nil)
         addFooterRuleIfNeeded(footerRule, contentView: contentView)
@@ -88,6 +85,7 @@ public struct OMScrollableChartRules {
     }
 
     /// addLeadingRuleIfNeeded
+    ///
     /// - Parameters:
     ///   - rule: ChartRuleProtocol
     ///   -mutating  view: UIView
@@ -112,7 +110,6 @@ public struct OMScrollableChartRules {
             let height = rule.ruleSize.height > 0 ?
                 rule.ruleSize.height :
                 contentView.bounds.height
-//            print(height, width)
             ruleLeadingAnchor = rule.leadingAnchor.constraint(equalTo: rule.chart.leadingAnchor)
             ruletopAnchor = rule.topAnchor.constraint(equalTo: contentView.topAnchor)
             rulewidthAnchor = rule.widthAnchor.constraint(equalToConstant: CGFloat(width))
@@ -132,6 +129,7 @@ public struct OMScrollableChartRules {
     }
     
     /// addFooterRuleIfNeeded
+    /// 
     /// - Parameters:
     ///   - rule: ruleFooter description
     ///   - view: UIView

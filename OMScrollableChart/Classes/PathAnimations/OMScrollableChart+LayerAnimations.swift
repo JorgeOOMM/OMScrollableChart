@@ -255,15 +255,16 @@ extension OMScrollableChart {
                                        renderIndex:Int,
                                        duration: TimeInterval = 2.0) {
         var index: Int = 0
+        guard let renderLayers = self.renderLayersAndPoints?.renderLayers else { return }
         guard renderLayers.count > 0, let selectedLayer = selectedLayer else {
             return
         }
 
-        index = self.renderLayers[renderIndex].firstIndex(of: selectedLayer) ?? 0
+        index = renderLayers[renderIndex].firstIndex(of: selectedLayer) ?? 0
         
-        let count = self.renderLayers[renderIndex].count
-        let pointBegin = self.renderLayers[renderIndex].takeElements(index)
-        let pointEnd   = self.renderLayers[renderIndex].takeElements(count - index,
+        let count = renderLayers[renderIndex].count
+        let pointBegin = renderLayers[renderIndex].takeElements(index)
+        let pointEnd   = renderLayers[renderIndex].takeElements(count - index,
                                                                      startAt: index + 1)
         animateFadingPoints(pointBegin.reversed(), duration: duration * 0.5, fromValue: 1.0, toValue: 0.5)
         animateFadingPoints(pointEnd, duration: duration * 0.5, fromValue: 1.0, toValue: 0.5)

@@ -61,6 +61,7 @@ extension OMScrollableChart: TouchesProtocol {
     /// - Returns: Renders?
     ///
     func renderForLayer(_ layer: CALayer) -> Renders? {
+        guard let renderLayers = self.renderLayersAndPoints?.renderLayers else { return nil }
         for renderIndex in 0..<renderLayers.count {
             if renderLayers[renderIndex].filter({$0 == layer}).count > 0 {
                 return Renders(rawValue: renderIndex)
@@ -68,6 +69,22 @@ extension OMScrollableChart: TouchesProtocol {
         }
         return nil
     }
+    
+    ///
+    /// Select Segment Layer And Border
+    ///
+    /// - Parameter offset: Int
+    ///
+    func selectSegmentLayerAndBorder(_ offset: Int) {
+        guard let renderLayers = self.renderLayersAndPoints?.renderLayers else { return }
+        let halfIndex = renderLayers[Renders.segments.rawValue].count / 2
+        let segmentLayer = renderLayers[Renders.segments.rawValue][offset]
+        let segmentLayerBorder = renderLayers[Renders.segments.rawValue][offset+halfIndex]
+        self.selectRenderLayer(segmentLayer, renderIndex: Renders.segments.rawValue)
+        self.selectRenderLayer(segmentLayerBorder, renderIndex: Renders.segments.rawValue)
+        self.selectedSegmentRenderLayer = segmentLayer
+    }
+    
     ///
     /// onPointsLayersTouch
     ///
@@ -81,14 +98,15 @@ extension OMScrollableChart: TouchesProtocol {
         layer.add(self.growAnimation, forKey: "GrowAnimation")
         // Save the selected point layer
         self.selectedPointRenderLayer = layer
+        guard let renderLayers = self.renderLayersAndPoints?.renderLayers else { return }
         // Calculate the segment layer next to the selected Point
         let mapped = renderLayers[Renders.segments.rawValue].map {$0.frame.origin.x - location.x}
+        
         guard let nearest = mapped.nearest(to: 0) else {
             return
         }
-        let segmentLayer = renderLayers[Renders.segments.rawValue][nearest.offset]
-        self.selectRenderLayer(segmentLayer, renderIndex: Renders.segments.rawValue)
-        self.selectedSegmentRenderLayer = segmentLayer
+        
+        selectSegmentLayerAndBorder(nearest.offset)
         
         self.selectRenderLayerWithAnimation(layer,
                                             selectedPoint: location,

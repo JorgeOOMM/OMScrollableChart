@@ -13,6 +13,20 @@
 // limitations under the License.
 
 import UIKit
+import GUILib
+
+var DefaultFooterSectionsText = [NSLocalizedString("Ene"),
+                                 NSLocalizedString("Feb"),
+                                 NSLocalizedString("Mar"),
+                                 NSLocalizedString("Abr"),
+                                 NSLocalizedString("May"),
+                                 NSLocalizedString("Jun"),
+                                 NSLocalizedString("Jul"),
+                                 NSLocalizedString("Ago"),
+                                 NSLocalizedString("Sep"),
+                                 NSLocalizedString("Oct"),
+                                 NSLocalizedString("Nov"),
+                                 NSLocalizedString("Dic")]
 
 // MARK: - OMScrollableChartRuleFooter -
 class OMScrollableChartRuleFooter: UIStackView, RuleProtocol {
@@ -34,17 +48,20 @@ class OMScrollableChartRuleFooter: UIStackView, RuleProtocol {
         }
     }
     /// init
+    ///
     /// - Parameter chart: OMScrollableChart
     required init(chart: OMScrollableChart!) {
         super.init(frame: .zero)
         self.chart = chart
         self.alignment = .top
-        backgroundColor = .clear
+        self.backgroundColor = .clear
     }
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    var ruleSize: CGSize { return CGSize(width: 0, height: self.chart.rules.footerViewHeight)}
+    var ruleSize: CGSize {
+        return CGSize(width: 0, height: self.chart.rules.footerViewHeight)
+    }
     var fontColor = UIColor.darkGreyBlueTwo {
         didSet {
             views?.forEach({($0 as? UILabel)?.textColor = fontColor})
@@ -56,9 +73,7 @@ class OMScrollableChartRuleFooter: UIStackView, RuleProtocol {
         }
     }
     // Sections text.
-    var footerSectionsText = [NSLocalizedString("Ene"), NSLocalizedString("Feb"), NSLocalizedString("Mar"),
-                                                                          NSLocalizedString("Abr"),
-                                                                          NSLocalizedString("May"), NSLocalizedString("Jun"), NSLocalizedString("Jul"), NSLocalizedString("Ago"), NSLocalizedString("Sep"), NSLocalizedString("Oct"), NSLocalizedString("Nov"), NSLocalizedString("Dic")] {
+    var footerSectionsText = DefaultFooterSectionsText {
         didSet {
             #if DEBUG
             if footerSectionsText.count > 0 {
@@ -75,17 +90,15 @@ class OMScrollableChartRuleFooter: UIStackView, RuleProtocol {
         guard !self.frame.isEmpty else {
             return false
         }
-        self.borderViews.forEach({ $0.removeFromSuperview()})
-        self.subviews.forEach({ $0.removeFromSuperview()})
+        self.borderViews.forEach{ $0.removeFromSuperview()}
+        self.subviews.forEach{ $0.removeFromSuperview()}
         let width  = chart.sectionWidth
         let height = ruleSize.height * 0.5
         let numOfSections = Int(chart.numberOfSections)
-        let month = Calendar.current.dateComponents([.day, .month, .year], from: Date()).month ?? 0
-        //if let month = startIndex {
-        let currentMonth = month
-        //let symbols = DateFormatter().monthSymbols
+        let currentMonth = self.chart.currentMonth
+//        let symbols = self.chart.monthSymbols
         for monthIndex in currentMonth...numOfSections + currentMonth  {
-            //GCLog.print("monthIndex: \(monthIndex % footerSectionsText.count) \(footerSectionsText[monthIndex % footerSectionsText.count])", .trace)
+            Log.v("month Index: \(monthIndex % footerSectionsText.count) \(footerSectionsText[monthIndex % footerSectionsText.count])")
             let label = UILabel(frame: .zero)
             label.translatesAutoresizingMaskIntoConstraints = false
             label.text = footerSectionsText[monthIndex % footerSectionsText.count]
@@ -103,13 +116,16 @@ class OMScrollableChartRuleFooter: UIStackView, RuleProtocol {
                                             weight: borderDecorationWidth,
                                 color: decorationColor.withAlphaComponent(0.24)))
         }
-       // }
         borderViews.append(self.setBorder(border: .top(inset: 10),
                                       weight: borderDecorationWidth,
                        color: decorationColor.withAlphaComponent(0.24)))
         return true
     }
 
+}
+
+
+extension OMScrollableChartRuleFooter {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
         if let touch = touches.first {
@@ -150,9 +166,8 @@ class OMScrollableChartRuleFooter: UIStackView, RuleProtocol {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-//        backgroundColor = .surfaceDark
-         if !layoutRule() { // TODO: update layout
-            //Log.print("Unable to create the rule layout" ,.error)
+         if !layoutRule() {
+            Log.e("Unable to create the rule layout")
         }
     }
     override func didMoveToSuperview() {

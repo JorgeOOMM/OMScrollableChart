@@ -92,9 +92,9 @@ class OMScrollableChartRuleLeading: UIView, RuleProtocol {
         self.chart = chart
         backgroundColor = .clear
     }
+    @available(*, unavailable, message: "Nib are unsupported")
     required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        backgroundColor = .clear
+        fatalError("Nib are unsupported")
     }
     var views: [UIView]?  {
         return labelViews
@@ -110,10 +110,7 @@ class OMScrollableChartRuleLeading: UIView, RuleProtocol {
         }
     }
     func layoutRule() -> Bool {
-        guard let chart = chart else {
-            return false
-        }
-        labelViews.forEach({$0.removeFromSuperview()})
+        labelViews.forEach{$0.removeFromSuperview()}
         labelViews.removeAll()
         let fontSize: CGFloat = font.pointSize
                 

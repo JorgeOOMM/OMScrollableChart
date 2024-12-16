@@ -58,6 +58,7 @@ extension OMScrollableChart {
         if renderIndex == Renders.points.rawValue {
             return
         }
+        guard let renderLayers = self.renderLayersAndPoints?.renderLayers else { return }
         // The render layers must exist
         guard renderLayers.count > 0 else {
             return
@@ -86,7 +87,8 @@ extension OMScrollableChart {
         })
     }
     func runRideProgress(layerToRide: CALayer?, renderIndex: Int, scrollAnimation: Bool = false) {
-        if let anim = self.ridePathAnimation {
+        guard let layersAnimator = self.renderLayersAndPoints?.layerBuilder?.layersAnimator else { return }
+        if let anim = layersAnimator.ridePathAnimation {
             if let layerRide = layerToRide {
                 CATransaction.withDisabledActions {
                     layerRide.transform = CATransform3DIdentity
@@ -130,14 +132,15 @@ extension OMScrollableChart {
     ///   - renderIndex: render index
     ///   - layerOpacity: opacity
     func animateRenderLayers(_ renderIndex: Int, layerOpacity: CGFloat) {
+        guard let renderLayersAndPoints = self.renderLayersAndPoints else { return }
+        
+        let renderLayers = renderLayersAndPoints.renderLayers
         guard renderLayers.count > 0 else {
             return
         }
+
         renderLayers[renderIndex].enumerated().forEach { layerIndex, layer  in
-            if let animation = self.renderDelegate?.animateLayers(chart: self,
-                                                         renderIndex: renderIndex,
-                                                         layerIndex: layerIndex,
-                                                         layer: layer) {
+            if let animation = self.layerBuilder?.animateLayers(renderIndex: renderIndex, layerIndex: layerIndex, layer: layer) {
                 if let animation = animation as? CAAnimationGroup {
                     for anim in animation.animations! {
                         let keyPath = anim.value(forKeyPath: "keyPath") as? String
@@ -162,7 +165,7 @@ extension OMScrollableChart {
                     } else if keyPath == "opacity" {
                         performOpacityAnimation(layer, animation)
                     } else if keyPath == "rideProgress" {
-                        runRideProgress(layerToRide: layerToRide,
+                        runRideProgress(layerToRide: renderLayersAndPoints.layerBuilder?.layersAnimator.layerToRide,
                                         renderIndex: renderIndex,
                                         scrollAnimation: isScrollAnimation && !isScrollAnimnationDone)
                         isScrollAnimnationDone = true
@@ -192,6 +195,7 @@ extension OMScrollableChart {
     }
     
     func updateRenderPointsOpacity( _ toValue: CGFloat = 0, _ duration: TimeInterval = 4.0) {
+        guard let renderLayers = self.renderLayersAndPoints?.renderLayers else { return }
         guard renderLayers[Renders.points.rawValue].isEmpty == false else {
             return
         }

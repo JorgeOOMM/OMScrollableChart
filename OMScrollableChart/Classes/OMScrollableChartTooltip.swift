@@ -43,18 +43,18 @@ public struct OMScrollableChartTooltip: TooltipleableProtocol {
         self.bubbleView.hideTooltip(position, duration: duration)
     }
     mutating public func configure() {
-        self.bubbleView.alpha           = chart.tooltipAlpha
-        self.bubbleView.backgroundColor = chart.toolTipBackgroundColor
-        self.bubbleView.font            = chart.tooltipFont
+        self.bubbleView.alpha           = TooltipTheme.tooltipAlpha
+        self.bubbleView.backgroundColor = TooltipTheme.toolTipBackgroundColor
+        self.bubbleView.font            = TooltipTheme.tooltipFont
         self.bubbleView.textAlignment   = .center
         // Layer
         self.bubbleView.layer.cornerRadius = 6
         self.bubbleView.layer.masksToBounds = true
-        self.bubbleView.layer.borderColor = chart.tooltipBorderColor
-        self.bubbleView.layer.borderWidth = chart.tooltipBorderWidth
+        self.bubbleView.layer.borderColor = TooltipTheme.tooltipBorderColor
+        self.bubbleView.layer.borderWidth = TooltipTheme.tooltipBorderWidth
         // Shadow
         self.bubbleView.layer.shadowColor = UIColor.black.cgColor
-        self.bubbleView.layer.shadowOffset  = chart.pointsLayersShadowOffset
+        self.bubbleView.layer.shadowOffset  = ScrollChartTheme.pointsLayersShadowOffset
         self.bubbleView.layer.shadowOpacity = 0.7
         self.bubbleView.layer.shadowRadius  = 3.0
         

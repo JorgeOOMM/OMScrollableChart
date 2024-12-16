@@ -50,7 +50,7 @@ class ViewController: UIViewController {
         segmentTypeOfData.insertSegment(withTitle: "discrete", at: 0, animated: false)
         segmentTypeOfData.insertSegment(withTitle: "regression", at: 1, animated: false)
         segmentTypeOfData.selectedSegmentIndex = 0 // discrete
-        let _ = self.chart.updateBasicSourceData()
+        let _ = self.chart.updateBasicSourceDataIfNeeded()
     }
     @IBAction  func typeOfDataSegmentChange( _ sender: Any)  {
         switch segmentTypeOfData.selectedSegmentIndex  {

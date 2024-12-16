@@ -31,9 +31,9 @@ protocol RenderLocationProtocol {
 }
 
 protocol ChartProtocol {
-    associatedtype ChartData
-    var discreteData: [ChartData?] {get set}
-    func updateBasicSourceData() -> Bool
+//    associatedtype ChartData
+//    var discreteData: [ChartData?] {get set}
+    func updateBasicSourceDataIfNeeded() -> Bool
 }
 
 public enum RenderType: Equatable{
@@ -82,8 +82,8 @@ protocol RenderableDelegateProtocol: AnyObject {
     func queryAnimation(chart: OMScrollableChart, renderIndex: Int) -> AnimationTiming
     func animationDidEnded(chart: OMScrollableChart,  renderIndex: Int, animation: CAAnimation)
     func didSelectDataIndex(chart: OMScrollableChart, renderIndex: Int, dataIndex: Int, layer: CALayer)
-    func dataLayers(chart: OMScrollableChart, renderIndex: Int, section: Int, points: [CGPoint]) -> [OMGradientShapeClipLayer]
-    func animateLayers(chart: OMScrollableChart, renderIndex: Int, layerIndex: Int ,layer: OMGradientShapeClipLayer) -> CAAnimation?
+//    func dataLayers(chart: OMScrollableChart, renderIndex: Int, section: Int, points: [CGPoint]) -> [OMGradientShapeClipLayer]
+//    func animateLayers(chart: OMScrollableChart, renderIndex: Int, layerIndex: Int ,layer: OMGradientShapeClipLayer) -> CAAnimation?
 }
 protocol RenderableProtocol: AnyObject {
     var numberOfRenders: Int {get}

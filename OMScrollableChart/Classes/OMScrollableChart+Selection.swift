@@ -45,18 +45,20 @@ extension OMScrollableChart {
     ///   - layer: layer
     ///   - renderIndex: Int
     func selectRenderLayer(_ layer: OMGradientShapeClipLayer, renderIndex: Int) {
-        self.renderLayers[renderIndex].filter { $0 != layer }.forEach { (layer: OMGradientShapeClipLayer) in
-            layer.gardientColor = self.unselectedColor
-            layer.opacity      = self.unselectedOpacy
+        guard let renderLayers = self.renderLayersAndPoints?.renderLayers else { return }
+        renderLayers[renderIndex].filter { $0 != layer && $0.path != layer.path }.forEach { (layer: OMGradientShapeClipLayer) in
+            layer.gardientColor = ScrollChartTheme.unselectedColor
+            layer.opacity      = ScrollChartTheme.unselectedOpacy
         }
-        layer.gardientColor = self.selectedColor
-        layer.opacity   = self.selectedOpacy
+        layer.gardientColor = ScrollChartTheme.selectedColor
+        layer.opacity   = ScrollChartTheme.selectedOpacy
     }
     
     func deselectRenderLayer(renderIndex: Int) {
-        self.renderLayers[renderIndex].forEach { (layer: OMGradientShapeClipLayer) in
-            layer.gardientColor = self.selectedColor
-            layer.opacity   = self.selectedOpacy
+        guard let renderLayers = self.renderLayersAndPoints?.renderLayers else { return }
+        renderLayers[renderIndex].forEach { (layer: OMGradientShapeClipLayer) in
+            layer.gardientColor = ScrollChartTheme.selectedColor
+            layer.opacity   = ScrollChartTheme.selectedOpacy
         }
     }
     /// locationToLayer
@@ -67,6 +69,7 @@ extension OMScrollableChart {
     ///   - mostNearLayer: Bool
     /// - Returns: OMGradientShapeClipLayer
     func locationToLayer( _ location: CGPoint, renderIndex: Int, mostNearLayer: Bool = true) -> OMGradientShapeClipLayer? {
+        guard let renderLayers = self.renderLayersAndPoints?.renderLayers else { return nil }
         let mapped = renderLayers[renderIndex].map {
             return $0.frame.origin.distance(from: location)
         }
@@ -168,14 +171,7 @@ extension OMScrollableChart {
                 tooltip.string = "\(dataSection) \(tooltipText)"
                 tooltip.displayTooltip(tooltipPosition, duration: duration)
             } else {
-                var amount: Double = 0
-                if renderDataPoints[renderIndex].count <= dataIndex {
-                    if let data = self.linregressData[renderIndex]?.data {
-                        amount = Double(data[dataIndex])
-                    }
-                } else {
-                    amount = Double(renderDataPoints[renderIndex][dataIndex])
-                }
+                let amount: Double = Double(renderDataPoints[renderIndex][dataIndex])
                 // then calculate manually
                 if let dataString = currencyFormatter.string(from: NSNumber(value: amount)) {
                     tooltip.string = "\(dataSection) \(dataString)"
