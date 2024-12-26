@@ -14,7 +14,7 @@
 import UIKit
 import GUILib
 // MARK: - RuleDelegateProtocol
-public class OMScrollableChartRuleFlow: RuleDelegateProtocol {
+public class RuleDelegate: RuleDelegateProtocol {
     public func footerSectionDidTouchUpInsideMove(section: CGFloat, selectedView: UIView?, location: CGPoint) {
         Log.v("footerSectionDidTouchUpInsideMove", section)
     }

@@ -103,7 +103,7 @@ extension OMScrollableChart {
     ///   - dataIndex: Int
     func didSelectedRenderLayerIndex(layer: CALayer, renderIndex: Int, dataIndex: Int) {
         // lets animate the footer rule
-        if let footer = footerRule as? OMScrollableChartRuleFooter,
+        if let footer = footerRule as? ChartRuleFooter,
            let views = footer.views {
             if dataIndex < views.count {
                 views[dataIndex].shakeGrow(duration: 1.0)
@@ -145,6 +145,10 @@ extension OMScrollableChart {
         if animation {
             tooltipPositionFix = layerPoint.position
         }
+        guard let tooltip = tooltip else {
+            return
+        }
+        
         // Get the selection data index
         if let dataIndex = dataIndexFromPoint(layerPoint.position,
                                               renderIndex: renderIndex) {
@@ -187,7 +191,7 @@ extension OMScrollableChart {
             let distance = tooltipPositionFix.distance(tooltipPosition)
             let factor: TimeInterval = TimeInterval(1 / (self.contentView.bounds.height / distance))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.tooltip.moveTooltip(tooltipPositionFix,
+                tooltip.moveTooltip(tooltipPositionFix,
                                          duration: factor * duration)
             }
         }

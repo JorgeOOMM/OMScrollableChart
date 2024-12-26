@@ -14,35 +14,10 @@
 
 import UIKit
 
-public struct OMScrollableChartRules {
-    var chart: OMScrollableChart
-    init(chart: OMScrollableChart) {
-        self.chart = chart
-    }
-    
+public class ChartRules {
     public var rulesMarks = [Float]()
-    func addToVerticalRuleMarks(leadingRule: RuleProtocol) {
-        chart.dashlines.removeVerticalLineLayers()
-        let leadingRuleWidth: CGFloat = leadingRule.ruleSize.width
-        let width: CGFloat = chart.contentView.frame.width
-        let fontSize = ruleFont.pointSize
-        let maxIndex = rulesPoints.count - 1
-        for (index, item) in rulesPoints.enumerated() {
-            var yPos = item.y
-            if index > 0 {
-                if index < maxIndex {
-                    yPos = item.y
-                } else {
-                    yPos = item.y
-                }
-            }
-            let markPointLeft  = CGPoint(x: leadingRuleWidth, y: yPos - fontSize)
-            let markPointRight = CGPoint(x: width, y: yPos - fontSize)
-            chart.dashlines.lineForRuleMark(point: markPointLeft,
-                                            endPoint: markPointRight)
-        }
-    }
-
+    var dashlines: ChartDashLines
+    var chart: OMScrollableChart
     var rootRule: RuleProtocol?
     var footerRule: RuleProtocol?
     var topRule: RuleProtocol?
@@ -60,12 +35,19 @@ public struct OMScrollableChartRules {
     func hideRules() { rules.forEach { $0.isHidden = true }}
     func showRules() { rules.forEach { $0.isHidden = false }}
     
+    init(chart: OMScrollableChart, dashlines: ChartDashLines) {
+        self.chart = chart
+        self.dashlines = dashlines
+    }
+    
+    ///
     /// Create and add rules
-    mutating func configure() {
-        let rootRule = OMScrollableChartRuleLeading(chart: chart)
+    ///
+    func configure() {
+        let rootRule = ChartRuleLeading(chart: chart)
         rootRule.font = ScrollChartTheme.ruleFont
         rootRule.fontColor = UIColor.black
-        let footerRule = OMScrollableChartRuleFooter(chart: chart)
+        let footerRule = ChartRuleFooter(chart: chart)
         footerRule.font = ScrollChartTheme.ruleFont
         footerRule.fontColor = UIColor.darkGreyBlueTwo
         self.rootRule = rootRule
@@ -78,10 +60,35 @@ public struct OMScrollableChartRules {
     ///
     /// - Parameter contentView: UIView container
     ///
-    mutating func configureRules( using contentView: UIView) {
+    func configureRules( using contentView: UIView) {
         addLeadingRuleIfNeeded(rootRule, contentView: contentView, view: nil)
         addFooterRuleIfNeeded(footerRule, contentView: contentView)
         rulebottomAnchor?.isActive = true
+    }
+    
+    /// addToVerticalRuleMarks
+    ///
+    /// - Parameter leadingRule: RuleProtocol
+    func addToVerticalRuleMarks(leadingRule: RuleProtocol) {
+        self.dashlines.removeVerticalLineLayers()
+        let leadingRuleWidth: CGFloat = leadingRule.ruleSize.width
+        let width: CGFloat = chart.contentView.frame.width
+        let fontSize = ruleFont.pointSize
+        let maxIndex = rulesPoints.count - 1
+        for (index, item) in rulesPoints.enumerated() {
+            var yPos = item.y
+            if index > 0 {
+                if index < maxIndex {
+                    yPos = item.y
+                } else {
+                    yPos = item.y
+                }
+            }
+            let markPointLeft  = CGPoint(x: leadingRuleWidth, y: yPos - fontSize)
+            let markPointRight = CGPoint(x: width, y: yPos - fontSize)
+            self.dashlines.lineForRuleMark(point: markPointLeft,
+                                            endPoint: markPointRight)
+        }
     }
 
     /// addLeadingRuleIfNeeded
@@ -89,7 +96,7 @@ public struct OMScrollableChartRules {
     /// - Parameters:
     ///   - rule: ChartRuleProtocol
     ///   -mutating  view: UIView
-    mutating func addLeadingRuleIfNeeded(_ rule: RuleProtocol?,
+    func addLeadingRuleIfNeeded(_ rule: RuleProtocol?,
                                          contentView: UIView,
                                          view: UIView? = nil) {
         guard let rule = rule else {

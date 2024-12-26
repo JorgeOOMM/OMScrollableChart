@@ -211,8 +211,7 @@ extension OMScrollableChart {
                                duration: TimeInterval = 2.0,
                                fromValue: Float = 1.0,
                                toValue: Float = 0.5) {
-        var delay: TimeInterval = 0.0
-        var currentDelay = delay
+        var currentDelay = 0.0
         let incremenatlDelay = duration / Double(layers.count)
         for point in layers {
             point.opacity = fromValue

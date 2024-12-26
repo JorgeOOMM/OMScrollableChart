@@ -19,9 +19,7 @@ import Accelerate
 // MARK: - Animations
 extension OMScrollableChart {
     
-    func performPathAnimation(_ layer: OMGradientShapeClipLayer,
-                              _ animation: CAAnimation,
-                              _ layerOpacity: CGFloat) {
+    func pathAnimation(_ layer: OMGradientShapeClipLayer,_ animation: CAAnimation, _ layerOpacity: CGFloat) {
         if layer.opacity == 0 {
             let anim = animationWithFadeGroup(layer,
                                               fromValue: CGFloat(layer.opacity),
@@ -34,9 +32,7 @@ extension OMScrollableChart {
         }
     }
     
-    func performPositionAnimation(_ layer: OMGradientShapeClipLayer,
-                                          _ animation: CAAnimation,
-                                          layerOpacity: CGFloat) {
+    func positionAnimation(_ layer: OMGradientShapeClipLayer, _ animation: CAAnimation, layerOpacity: CGFloat) {
         let anima = animationWithFadeGroup(layer,
                                            toValue: layerOpacity,
                                            animations: [animation])
@@ -47,8 +43,7 @@ extension OMScrollableChart {
         }
     }
     
-    func performOpacityAnimation(_ layer: OMGradientShapeClipLayer,
-                                         _ animation: CAAnimation) {
+    func opacityAnimation(_ layer: OMGradientShapeClipLayer,_ animation: CAAnimation) {
         
         layer.add(animation, forKey: ScrollChartAnimationKeys.renderOpacityAnimationKey, withCompletion: nil)
     }
@@ -86,6 +81,14 @@ extension OMScrollableChart {
 //            }
         })
     }
+    
+    /// runRideProgress
+    ///
+    /// - Parameters:
+    ///   - layerToRide: CALayer
+    ///   - renderIndex: Int
+    ///   - scrollAnimation: Bool
+    ///
     func runRideProgress(layerToRide: CALayer?, renderIndex: Int, scrollAnimation: Bool = false) {
         guard let layersAnimator = self.renderLayersAndPoints?.layerBuilder?.layersAnimator else { return }
         if let anim = layersAnimator.ridePathAnimation {
@@ -103,14 +106,19 @@ extension OMScrollableChart {
                             layerRide.transform = presentationLayer.transform
                         }
                     }
-                    self.animationDidEnded(renderIndex: Int(renderIndex), animation: anim)
+                    self.onAnimationCompletion(renderIndex: Int(renderIndex), animation: anim)
                     layerRide.removeAnimation(forKey: "around")
                 })
             }
         }
     }
-    
-    func animationDidEnded(renderIndex: Int, animation: CAAnimation) {
+    /// onAnimationCompletion
+    ///
+    /// - Parameters:
+    ///   - renderIndex: Int
+    ///   - animation: CAAnimation
+    ///
+    func onAnimationCompletion(renderIndex: Int, animation: CAAnimation) {
         let keyPath = animation.value(forKeyPath: "keyPath") as? String
         if let animationKF = animation as? CAKeyframeAnimation,
            animationKF.path != nil,
@@ -131,6 +139,7 @@ extension OMScrollableChart {
     /// - Parameters:
     ///   - renderIndex: render index
     ///   - layerOpacity: opacity
+    ///
     func animateRenderLayers(_ renderIndex: Int, layerOpacity: CGFloat) {
         guard let renderLayersAndPoints = self.renderLayersAndPoints else { return }
         
@@ -145,11 +154,11 @@ extension OMScrollableChart {
                     for anim in animation.animations! {
                         let keyPath = anim.value(forKeyPath: "keyPath") as? String
                         if keyPath == "path" {
-                            performPathAnimation(layer, anim, layerOpacity)
+                            pathAnimation(layer, anim, layerOpacity)
                         } else if keyPath == "position" {
-                            performPositionAnimation(layer, anim, layerOpacity: layerOpacity)
+                            positionAnimation(layer, anim, layerOpacity: layerOpacity)
                         } else if keyPath == "opacity" {
-                            performOpacityAnimation(layer, anim)
+                            opacityAnimation(layer, anim)
                         } else {
                             if let keyPath = keyPath {
                                 Log.e("Unknown key path \(keyPath) for CAAnimationGroup")
@@ -159,11 +168,11 @@ extension OMScrollableChart {
                 } else {
                     let keyPath = animation.value(forKeyPath: "keyPath") as? String
                     if keyPath == "path" {
-                        performPathAnimation(layer, animation, layerOpacity)
+                        pathAnimation(layer, animation, layerOpacity)
                     } else if keyPath == "position" {
-                        performPositionAnimation(layer, animation, layerOpacity: layerOpacity)
+                        positionAnimation(layer, animation, layerOpacity: layerOpacity)
                     } else if keyPath == "opacity" {
-                        performOpacityAnimation(layer, animation)
+                        opacityAnimation(layer, animation)
                     } else if keyPath == "rideProgress" {
                         runRideProgress(layerToRide: renderLayersAndPoints.layerBuilder?.layersAnimator.layerToRide,
                                         renderIndex: renderIndex,
@@ -178,22 +187,32 @@ extension OMScrollableChart {
             }
         }
     }
+    ///
+    /// update Renders Opacity
+    ///
     func updateRendersOpacity() {
-        // Create the points from the discrete data using the renders
-        //print("[\(Date().description)] [RND] updating render layer opacity [PKJI]")
-        if allDataPointsRender.isEmpty == false {
-            if let render = self.renderSource,
-               let renderDelegate = renderDelegate, render.numberOfRenders > 0  {
-                for renderIndex in 0..<render.numberOfRenders {
-                    let opacity = renderDelegate.layerOpacity(chart: self, renderIndex: renderIndex)
-                    // layout renders opacity
-                    updateRenderLayersOpacity(for: renderIndex, layerOpacity: opacity)
-                }
+        Log.v("Updating render layer opacity.")
+        guard allDataPointsRender.isEmpty == false else {
+            Log.w("Unable to access the render data points.")
+            return
+        }
+        if let render = self.renderSource,
+           let renderDelegate = renderDelegate, render.numberOfRenders > 0  {
+            for renderIndex in 0..<render.numberOfRenders {
+                let opacity = renderDelegate.layerOpacity(chart: self, renderIndex: renderIndex)
+                // layout renders opacity
+                self.updateRenderLayersOpacity(for: renderIndex, layerOpacity: opacity)
             }
         }
-        //print("[\(Date().description)] [RND] visibles \(visibleLayers.count) no visibles \(invisibleLayers.count) [PKJI]")
     }
-    
+    ///
+    /// updateRenderPointsOpacity
+    ///
+    /// - Parameters:
+    ///
+    ///   - toValue: CGFloat
+    ///   - duration: TimeInterval
+    ///
     func updateRenderPointsOpacity( _ toValue: CGFloat = 0, _ duration: TimeInterval = 4.0) {
         guard let renderLayers = self.renderLayersAndPoints?.renderLayers else { return }
         guard renderLayers[Renders.points.rawValue].isEmpty == false else {

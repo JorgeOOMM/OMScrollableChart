@@ -15,6 +15,27 @@
 import UIKit
 import GUILib
 
+extension UIColor {
+    var colorMap: [UIColor] {
+        return [self.lighterColor(percent: 0.0),
+                self.lighterColor(percent: 0.1),
+                self.lighterColor(percent: 0.2),
+                self.lighterColor(percent: 0.3),
+                self.lighterColor(percent: 0.4),
+                self.darkerColor(percent: 0.4),
+                self.darkerColor(percent: 0.3),
+                self.darkerColor(percent: 0.2),
+                self.darkerColor(percent: 0.1),
+                self.darkerColor(percent: 0.0)]
+    }
+}
+
+
+let layersOnTopBaseZPosition: CGFloat = 10000
+let layersUnderTopBaseZPosition: CGFloat = 1000
+let layersUnderUnderBaseZPosition: CGFloat = 100
+
+
 var animationTimingTable: [AnimationTiming] = [
     .oneShot,
     .oneShot,
@@ -26,72 +47,9 @@ var animationTimingTable: [AnimationTiming] = [
 ]
 
 extension OMScrollableChart: RenderableDelegateProtocol, RenderableProtocol {
-//    func animateLayers(chart: OMScrollableChart,
-//                       renderIndex: Int,
-//                       layerIndex: Int,
-//                       layer: OMGradientShapeClipLayer) -> CAAnimation? {
-//        switch Renders(rawValue: renderIndex) {
-//        case .points, .selectedPoint, .currentPoint, .segments:
-//            return nil
-//        case .polyline:
-//            guard let polylinePath = chart.polylinePath,
-//                    let layerToRide = chart.renderSelectedPointsLayer else {
-//                return nil
-//            }
-//            // Ride the selected point along the polyline path
-//            return chart.animateLayerPathRideToPoint( polylinePath,
-//                                                      layerToRide: layerToRide,
-//                                                      pointIndex: chart.numberOfSections,
-//                                                      duration: 10)
-//            
-//        case .bar1:
-//            let pathStart = pathsToAnimate[renderIndex - 3][layerIndex]
-//            return chart.animateLayerPath( layer,
-//                                           pathStart: pathStart,
-//                                           pathEnd: UIBezierPath( cgPath: layer.path!))
-//        case .bar2:
-//            let pathStart = pathsToAnimate[renderIndex - 3][layerIndex]
-//            return chart.animateLayerPath( layer,
-//                                           pathStart: pathStart,
-//                                           pathEnd: UIBezierPath( cgPath: layer.path!) )
-//            
-//        default:
-//            return nil
-//        }
-//    }
     var numberOfRenders: Int {
         return RendersBase
     }
-//    func dataLayers(chart: OMScrollableChart, renderIndex: Int, section: Int, points: [CGPoint]) -> [OMGradientShapeClipLayer] {
-//        switch Renders(rawValue:  renderIndex) {
-//        case .bar1:
-//            let layers =  chart.createRectangleLayers(points, columnIndex: 1, count: 6,
-//                                                      color: .black)
-//#if DEBUG
-//            layers.forEach({$0.name = "bar income"})  //debug
-//#endif
-//            self.pathsToAnimate.insert(
-//                chart.createInverseRectanglePaths(points, columnIndex: 1, count: 6),
-//                at: 0)
-//            return layers
-//        case .bar2:
-//            
-//            let layers =  chart.createRectangleLayers(points, columnIndex: 4, count: 6,
-//                                                      color: .green)
-//#if DEBUG
-//            layers.forEach({$0.name = "bar outcome"})  //debug
-//#endif
-//            
-//            self.pathsToAnimate.insert(
-//                chart.createInverseRectanglePaths(points, columnIndex: 4, count: 6),
-//                at: 1)
-//            return layers
-//            
-//        default:
-//            return []
-//        }
-//    }
-
     func queryAnimation(chart: OMScrollableChart, renderIndex: Int) -> AnimationTiming {
         return animationTimingTable[renderIndex]
     }
@@ -147,5 +105,45 @@ extension OMScrollableChart: RenderableDelegateProtocol, RenderableProtocol {
         case 6: return 0
         default: return 0
         }
+    }
+}
+
+//
+// Query the data layers to the delegate
+//
+extension OMScrollableChart {
+
+    func regressBondsSize(_ renderIndex: Int) -> CGSize {
+        let size = contentView.bounds.size
+        let numOfPoints = CGFloat(self.renderDataPoints[renderIndex].count)
+        let regressWidth = (self.sectionWidth * CGFloat(self.numberOfRegressValues))
+        let width = numOfPoints * self.sectionWidth + regressWidth
+        return  CGSize(width: width,
+                       height: size.height)
+    }
+    
+    func discreteBondsSize(_ renderIndex: Int) -> CGSize {
+        let size = contentView.bounds.size
+        return CGSize(width: CGFloat(self.renderDataPoints[renderIndex].count) * self.sectionWidth, height: size.height)
+    }
+    
+    /// renderLayers
+    ///
+    /// - Parameters:
+    ///   - renderIndex: render index
+    ///   - renderAs: RenderData
+    func renderLayers(_ renderIndex: Int, renderAs: RenderType) {
+        let currentRenderData = renderDataPoints[renderIndex]
+        switch renderAs {
+        case .simplified(let value):
+            self.renderLayersAndPoints?.makeSimplified(currentRenderData, renderIndex, discreteBondsSize(renderIndex), value)
+        case .averaged(let value):
+            self.renderLayersAndPoints?.makeAverage(currentRenderData, renderIndex, discreteBondsSize(renderIndex), value)
+        case .discrete:
+            self.renderLayersAndPoints?.makeDiscrete(currentRenderData, renderIndex, discreteBondsSize(renderIndex))
+        case .linregress(let value):
+            self.renderLayersAndPoints?.makeLinregress(currentRenderData, renderIndex, regressBondsSize(renderIndex), value)
+        }
+        self.renderType.insert(renderAs, at: renderIndex)
     }
 }

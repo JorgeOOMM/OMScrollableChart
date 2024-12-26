@@ -29,11 +29,11 @@ extension OMScrollableChart: TouchesProtocol {
     
     func onTouchesMoved(_ touches: Set<UITouch>) {
         let location: CGPoint = locationFromTouchInContentView(touches)
-        tooltip.moveTooltip(location)
+        self.tooltip?.moveTooltip(location)
     }
     func onTouchesEnded(_ touches: Set<UITouch>) {
         let location: CGPoint = locationFromTouchInContentView(touches)
-        tooltip.hideTooltip(location)
+        self.tooltip?.hideTooltip(location)
     }
     
 //    func onPointSelected(_ selectedLayer: OMGradientShapeClipLayer, _ location: CGPoint, _ renderIndex: Int) {

@@ -15,6 +15,7 @@
 
 
 import UIKit
+import GUILib
 
 
 public protocol RuleDelegateProtocol {
@@ -57,4 +58,62 @@ protocol RuleProtocol: UIView {
     func layoutRule() -> Bool
     func footerRuleSectionIndexSelected(at index: CGFloat?) -> Bool
     func subviewIndexFromPoint(_ location: CGPoint) -> Int
+}
+
+
+extension RuleProtocol {
+    ///
+    /// footerRuleSectionIndexSelected
+    ///
+    /// - Parameter location: CGPoint
+    ///
+    func footerRuleSectionIndexSelected(at index: CGFloat? = nil ) -> Bool {
+        guard let ruleViews = self.views else { return false }
+        if let sectionSelectedIndex = index {
+            let idx = Int(sectionSelectedIndex)
+            let selectedFooterView = ruleViews[idx]
+            guard let delegate = chart.renderDelegate else { return false }
+            
+            print("Notify section selected index",
+                  sectionSelectedIndex,
+                  selectedFooterView,
+                  delegate)
+            
+            // notify
+//            for render in RenderManager.shared.ruleEventsRenders {
+//                // OMScrollableChartRenderableDelegateProtocol
+//                delegate.didTouchFooterSectionView(chart: chart,
+//                                                   renderIndex: render.index,
+//                                                   sectionIndex: Int(sectionSelectedIndex),
+//                                                   view: selectedFooterView)
+//            }
+            
+            chart
+                .ruleDelegate?
+                .footerSectionDidTouchUpInside(section: sectionSelectedIndex,
+                                                         selectedView: selectedFooterView)
+            
+            return true
+        }
+        return false
+    }
+    ///
+    /// Get the subview Index From Point
+    ///
+    /// - Parameter location: CGPoint
+    /// - Returns: Int
+    ///
+    func subviewIndexFromPoint(_ location: CGPoint) -> Int {
+        guard let views = views else {
+            return Index.invalid.rawValue
+        }
+        for (index, view) in views.enumerated() {
+            if view.frame.contains(location) {
+                // we found the finally touched view
+                Log.v("Found the touched view: \(index) \(view)")
+                return index
+            }
+        }
+        return Index.invalid.rawValue
+    }
 }

@@ -14,7 +14,7 @@
 //
 import UIKit
 // MARK: - OMScrollableChartDashLines
-public class OMScrollableChartDashLines {
+public class ChartDashLines {
     var dashVerticalLineLayers = [CAShapeLayer]() // OMGradientShapeClipLayer??
     var contentView: UIView!
     init(contentView: UIView!) {

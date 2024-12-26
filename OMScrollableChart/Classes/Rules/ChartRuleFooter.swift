@@ -29,7 +29,7 @@ var DefaultFooterSectionsText = [NSLocalizedString("Ene"),
                                  NSLocalizedString("Dic")]
 
 // MARK: - OMScrollableChartRuleFooter -
-class OMScrollableChartRuleFooter: UIStackView, RuleProtocol {
+class ChartRuleFooter: UIStackView, RuleProtocol {
     var fontStrokeColor: UIColor = .black
     var leftInset: CGFloat = 16
     var chart: OMScrollableChart!
@@ -60,7 +60,10 @@ class OMScrollableChartRuleFooter: UIStackView, RuleProtocol {
         fatalError("init(coder:) has not been implemented")
     }
     var ruleSize: CGSize {
-        return CGSize(width: 0, height: self.chart.rules.footerViewHeight)
+        guard let rules = chart.rules else {
+            return .zero
+        }
+        return CGSize(width: 0, height: rules.footerViewHeight)
     }
     var fontColor = UIColor.darkGreyBlueTwo {
         didSet {
@@ -84,20 +87,20 @@ class OMScrollableChartRuleFooter: UIStackView, RuleProtocol {
         }
     }
 
+    ///
     /// create rule layout
+    ///
     /// - Returns: Bool
+    ///
     func layoutRule() -> Bool {
-        guard !self.frame.isEmpty else {
-            return false
-        }
         self.borderViews.forEach{ $0.removeFromSuperview()}
         self.subviews.forEach{ $0.removeFromSuperview()}
         let width  = chart.sectionWidth
         let height = ruleSize.height * 0.5
         let numOfSections = Int(chart.numberOfSections)
-        let currentMonth = self.chart.currentMonth
+        let currentMonth = Date.currentMonth
 //        let symbols = self.chart.monthSymbols
-        for monthIndex in currentMonth...numOfSections + currentMonth  {
+        for monthIndex in currentMonth...numOfSections + currentMonth {
             Log.v("month Index: \(monthIndex % footerSectionsText.count) \(footerSectionsText[monthIndex % footerSectionsText.count])")
             let label = UILabel(frame: .zero)
             label.translatesAutoresizingMaskIntoConstraints = false
@@ -125,7 +128,7 @@ class OMScrollableChartRuleFooter: UIStackView, RuleProtocol {
 }
 
 
-extension OMScrollableChartRuleFooter {
+extension ChartRuleFooter {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
         if let touch = touches.first {
@@ -149,7 +152,7 @@ extension OMScrollableChartRuleFooter {
         // Move the touch
         if let touch = touches.first {
             let idx = Int(ruleFooterViewSelectedSectionIndex)
-            chart.flowDelegate?.footerSectionDidTouchUpInsideMove(section: ruleFooterViewSelectedSectionIndex, selectedView: views[idx] ,
+            chart.ruleDelegate?.footerSectionDidTouchUpInsideMove(section: ruleFooterViewSelectedSectionIndex, selectedView: views[idx] ,
                                                                  location: touch.location(in: self))
         }
     }
@@ -159,7 +162,7 @@ extension OMScrollableChartRuleFooter {
         guard let views = views else { return}
         let idx = Int(ruleFooterViewSelectedSectionIndex)
         // Release the touch
-        chart.flowDelegate?.footerSectionDidTouchUpInsideRelease(section: ruleFooterViewSelectedSectionIndex,
+        chart.ruleDelegate?.footerSectionDidTouchUpInsideRelease(section: ruleFooterViewSelectedSectionIndex,
                                                                  selectedView: views[idx] )
         ruleFooterViewSelectedSectionIndex = 0
     }
@@ -167,7 +170,7 @@ extension OMScrollableChartRuleFooter {
     override func layoutSubviews() {
         super.layoutSubviews()
          if !layoutRule() {
-            Log.e("Unable to create the rule layout")
+            Log.e("Unable to create the rule layout \(self)")
         }
     }
     override func didMoveToSuperview() {

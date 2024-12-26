@@ -21,11 +21,11 @@
 
 import UIKit
 
-public struct OMScrollableChartTooltip: TooltipleableProtocol {
-    private var chart: OMScrollableChart!
+public class ChartTooltip: TooltipleableProtocol {
+    private var contentView: UIView!
     private var bubbleView: OMBubbleTextView = OMBubbleTextView()
-    init(chart: OMScrollableChart!) {
-        self.chart = chart
+    init(contentView: UIView!) {
+        self.contentView = contentView
     }
     // text
     public var string: String? {
@@ -42,7 +42,7 @@ public struct OMScrollableChartTooltip: TooltipleableProtocol {
     public func hideTooltip(_ position: CGPoint, duration: TimeInterval = 4.0) {
         self.bubbleView.hideTooltip(position, duration: duration)
     }
-    mutating public func configure() {
+    public func configure() {
         self.bubbleView.alpha           = TooltipTheme.tooltipAlpha
         self.bubbleView.backgroundColor = TooltipTheme.toolTipBackgroundColor
         self.bubbleView.font            = TooltipTheme.tooltipFont
@@ -60,6 +60,6 @@ public struct OMScrollableChartTooltip: TooltipleableProtocol {
         
         self.bubbleView.isFlipped = true
         
-        self.chart.contentView.addSubview(self.bubbleView)
+        self.contentView.addSubview(self.bubbleView)
     }
 }

@@ -28,58 +28,10 @@ public func NSLocalizedString(_ key: String,
     Foundation.NSLocalizedString(key, tableName: tableName,bundle: bundle,value: value,comment: comment)
 }
 
-
-extension RuleProtocol {
-    /// footerRuleSectionIndexSelected
-    /// - Parameter location: CGPoint
-    func footerRuleSectionIndexSelected(at index: CGFloat? = nil ) -> Bool {
-        guard let ruleViews = self.views else { return false }
-        if let sectionSelectedIndex = index {
-            let idx = Int(sectionSelectedIndex)
-            let selectedFooterView = ruleViews[idx]
-            guard let delegate = chart.renderDelegate else { return false }
-            
-            print("Notify section selected index",
-                  sectionSelectedIndex,
-                  selectedFooterView,
-                  delegate)
-            
-            // notify
-//            for render in RenderManager.shared.ruleEventsRenders {
-//                // OMScrollableChartRenderableDelegateProtocol
-//                delegate.didTouchFooterSectionView(chart: chart,
-//                                                   renderIndex: render.index,
-//                                                   sectionIndex: Int(sectionSelectedIndex),
-//                                                   view: selectedFooterView)
-//            }
-            
-            chart
-                .flowDelegate?
-                .footerSectionDidTouchUpInside(section: sectionSelectedIndex,
-                                                         selectedView: selectedFooterView)
-            
-            return true
-        }
-        return false
-    }
-    func subviewIndexFromPoint(_ location: CGPoint) -> Int {
-        guard let views = views else {
-            return Index.invalid.rawValue
-        }
-        for (index, view) in views.enumerated() {
-            if view.frame.contains(location) {
-                //we found the finally touched view
-                print(index,"Found it", view)
-                return index
-            }
-        }
-        return Index.invalid.rawValue
-    }
-}
 //
-// MARK: - OMScrollableChartRuleLeading -
+// MARK: - ChartRuleLeading -
 //
-class OMScrollableChartRuleLeading: UIView, RuleProtocol {
+class ChartRuleLeading: UIView, RuleProtocol {
     private var labelViews = [UIView]()
     var type: RuleType = .leading
     var chart: OMScrollableChart!
@@ -113,8 +65,10 @@ class OMScrollableChartRuleLeading: UIView, RuleProtocol {
         labelViews.forEach{$0.removeFromSuperview()}
         labelViews.removeAll()
         let fontSize: CGFloat = font.pointSize
-                
-        for (index, item) in chart.rules.rulesPoints.enumerated() {
+        guard let rules = chart.rules else {
+            return false
+        }
+        for (index, item) in rules.rulesPoints.enumerated() {
                 if let stepString = chart.currencyFormatter.string(from: NSNumber(value: chart.rulesMarks[index])) {
                     let string = NSAttributedString(string: stepString,
                                                     attributes: [NSAttributedString.Key.font: self.font,
@@ -130,7 +84,7 @@ class OMScrollableChartRuleLeading: UIView, RuleProtocol {
                     self.addSubview(label)
                     labelViews.append(label)
                     // Notify the draw
-                    chart.flowDelegate?.drawRootRuleText(in: label.frame, text: string)
+                    chart.ruleDelegate?.drawRootRuleText(in: label.frame, text: string)
                 }
         }
         return true
@@ -141,8 +95,8 @@ class OMScrollableChartRuleLeading: UIView, RuleProtocol {
     }
     override func layoutSubviews() {
         super.layoutSubviews()
-        if !layoutRule() { // TODO: update layout
-            Log.e("Unable to create the rule layout")
+        if !layoutRule() {
+            Log.e("Unable to create the rule layout \(self)")
         }
     }
 }
